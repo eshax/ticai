@@ -215,9 +215,34 @@
 
                         </div>
                         <div class="list-item change-item">
-                          <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
-                            {{ (stock.change_percent * 100).toFixed(2) }}%
-                          </span>
+                          <!-- 涨幅部分添加分时图弹窗 -->
+                          <el-popover
+                            placement="right"
+                            width="580"
+                            trigger="hover"
+                            :teleported="true"
+                          >
+                            <template #default>
+                              <div class="chart-container">
+                                <div class="chart-loading" v-if="stockChartLoading[stock.symbol]">
+                                  <i class="fa fa-spinner fa-spin"></i> 加载中...
+                                </div>
+                                <iframe
+                                  :src="getSinaStockChartUrl(stock.symbol)"
+                                  frameborder="0"
+                                  width="100%"
+                                  height="300"
+                                  @load="stockChartLoading[stock.symbol] = false"
+                                  class="stock-chart-iframe"
+                                ></iframe>
+                              </div>
+                            </template>
+                            <template #reference>
+                              <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
+                                {{ (stock.change_percent * 100).toFixed(2) }}%
+                              </span>
+                            </template>
+                          </el-popover>
                         </div>
                       </div>
                     </div>
@@ -300,9 +325,34 @@
 
                         </div>
                         <div class="list-item change-item">
-                          <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
-                            {{ (stock.change_percent * 100).toFixed(2) }}%
-                          </span>
+                          <!-- 涨幅部分添加分时图弹窗 -->
+                          <el-popover
+                            placement="right"
+                            width="580"
+                            trigger="hover"
+                            :teleported="true"
+                          >
+                            <template #default>
+                              <div class="chart-container">
+                                <div class="chart-loading" v-if="stockChartLoading[stock.symbol]">
+                                  <i class="fa fa-spinner fa-spin"></i> 加载中...
+                                </div>
+                                <iframe
+                                  :src="getSinaStockChartUrl(stock.symbol)"
+                                  frameborder="0"
+                                  width="100%"
+                                  height="300"
+                                  @load="stockChartLoading[stock.symbol] = false"
+                                  class="stock-chart-iframe"
+                                ></iframe>
+                              </div>
+                            </template>
+                            <template #reference>
+                              <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
+                                {{ (stock.change_percent * 100).toFixed(2) }}%
+                              </span>
+                            </template>
+                          </el-popover>
                         </div>
                       </div>
                     </div>
@@ -331,7 +381,8 @@ import axios from 'axios';
 import { 
   ElHeader, ElMain, ElTitle, 
   ElSkeleton, ElAlert, ElEmpty,
-  ElTooltip, ElButtonGroup, ElButton, ElDatePicker
+  ElTooltip, ElButtonGroup, ElButton, ElDatePicker,
+  ElPopover  // 新增引入Popover组件
 } from 'element-plus';
 
 // 定义数据源映射关系
@@ -350,6 +401,19 @@ const formatStockCode = (code) => {
   return numbers ? numbers.join('') : code;
 };
 
+// 获取新浪股票分时图URL
+const getSinaStockChartUrl = (symbol) => {
+  // 提取纯数字代码
+  const code = formatStockCode(symbol);
+  if (!code) return '';
+  
+  // 判断市场类型，生成对应的新浪财经URL
+  // 沪市股票代码以6开头，深市以0或3开头
+  let marketPrefix = code.startsWith('6') ? 'sh' : 'sz';
+  
+  // 新浪财经分时图URL
+  return `https://image.sinajs.cn/newchart/min/n/${marketPrefix}${code}.gif`;
+};
 
 // 日期处理工具
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -639,6 +703,7 @@ const showUpdateTip = ref(false);
 const isUpdateTipManuallySet = ref(false);
 const updatedStocks = ref({ added: [], removed: [], changed: [] });
 const groupExpandedState = ref({}); // 用于保存分组展开状态
+const stockChartLoading = ref({}); // 用于跟踪股票图表加载状态
 
 // 计算属性
 const isToday = computed(() => selectedDate.value === today);
@@ -823,6 +888,11 @@ const fetchStockData = async (isAutoRefresh = false) => {
         const isChanged = changes.changed.some(s => s.symbol === stock.symbol);
         stock.wasUpdated = isChanged || changes.added.some(s => s.symbol === stock.symbol);
         stock.updateTime = new Date().toISOString();
+        
+        // 初始化图表加载状态
+        if (!stockChartLoading.value[stock.symbol]) {
+          stockChartLoading.value[stock.symbol] = true;
+        }
       });
       
       rawData.value = formattedNewData;
@@ -841,6 +911,11 @@ const fetchStockData = async (isAutoRefresh = false) => {
         const oldStock = uniqueOldData.find(s => s.symbol === stock.symbol);
         if (oldStock) {
           stock.wasUpdated = oldStock.wasUpdated;
+        }
+        
+        // 初始化图表加载状态
+        if (!stockChartLoading.value[stock.symbol]) {
+          stockChartLoading.value[stock.symbol] = true;
         }
       });
       rawData.value = formattedNewData;
@@ -1695,6 +1770,7 @@ html, body {
 .change-percent {
   font-size: 10px;
   font-weight: 500;
+  cursor: pointer; /* 提示用户这里可以交互 */
 }
 
 .positive {
@@ -1703,6 +1779,36 @@ html, body {
 
 .negative {
   color: #52c41a;
+}
+
+/* 分时图弹窗样式 */
+:deep(.el-popover) {
+  padding: 0 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.chart-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+
+.stock-chart-iframe {
+  border-radius: 6px;
 }
 
 /* 提示组件样式 */
@@ -1793,6 +1899,15 @@ html, body {
   
   .truncate-text {
     max-width: 60px;
+  }
+  
+  /* 移动端调整分时图大小 */
+  :deep(.el-popover) {
+    width: 90vw !important;
+  }
+  
+  .stock-chart-iframe {
+    height: 250px !important;
   }
 }
 </style>
