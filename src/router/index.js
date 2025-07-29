@@ -18,7 +18,7 @@ const routes = [
   },
   { 
     path: '/', 
-    redirect: '/stock-card'  // 默认显示卡片视图
+    redirect: '/stock-table'  // 默认显示列表视图
   }
 ];
 
