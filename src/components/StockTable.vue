@@ -59,6 +59,19 @@
             @change="handleDateChange"
             class="date-picker"
           />
+
+          <!-- 日期导航按钮组 -->
+          <el-button-group class="date-nav-buttons">
+            <el-button size="small" @click="navigateDate(-1)" :disabled="!canNavigateDate(-1)">
+              <i class="fa fa-chevron-left"></i>
+              上一日
+            </el-button>
+            <el-button size="small" @click="navigateDate(1)" :disabled="!canNavigateDate(1)">
+              <i class="fa fa-chevron-right"></i>
+              下一日
+            </el-button>
+          </el-button-group>
+
         </div>
       </div>
     </el-header>
@@ -350,6 +363,64 @@ const getLastWorkday = () => {
   const daysToSubtract = day === 0 ? 2 : day === 6 ? 1 : 1;
   date.setDate(date.getDate() - daysToSubtract);
   return date.toISOString().split('T')[0];
+};
+
+// 日期导航功能 - 获取指定日期的前/后工作日
+const getAdjustedDate = (dateStr, offset) => {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() + offset);
+  
+  // 跳过周末
+  let day = date.getDay();
+  if (day === 0) { // 周日
+    date.setDate(date.getDate() + (offset > 0 ? 1 : -2));
+  } else if (day === 6) { // 周六
+    date.setDate(date.getDate() + (offset > 0 ? 2 : -1));
+  }
+  
+  // 检查是否超出日期范围限制
+  const minDate = new Date('2020-01-01');
+  const maxDate = new Date();
+  
+  if (date < minDate) {
+    return minDate.toISOString().split('T')[0];
+  }
+  
+  if (date > maxDate) {
+    return maxDate.toISOString().split('T')[0];
+  }
+  
+  return date.toISOString().split('T')[0];
+};
+
+// 检查是否可以导航到指定偏移的日期
+const canNavigateDate = (offset) => {
+  const date = new Date(selectedDate.value);
+  date.setDate(date.getDate() + offset);
+  
+  // 跳过周末计算有效日期
+  let adjustedDate = new Date(date);
+  let day = adjustedDate.getDay();
+  if (day === 0) { // 周日
+    adjustedDate.setDate(adjustedDate.getDate() + (offset > 0 ? 1 : -2));
+  } else if (day === 6) { // 周六
+    adjustedDate.setDate(adjustedDate.getDate() + (offset > 0 ? 2 : -1));
+  }
+  
+  // 检查是否在有效范围内
+  const minDate = new Date('2020-01-01');
+  const maxDate = new Date();
+  
+  return adjustedDate >= minDate && adjustedDate <= maxDate;
+};
+
+// 日期导航处理函数
+const navigateDate = (offset) => {
+  if (!canNavigateDate(offset)) return;
+  
+  const newDate = getAdjustedDate(selectedDate.value, offset);
+  selectedDate.value = newDate;
+  handleDateChange(newDate);
 };
 
 // 时间检查函数
@@ -1025,6 +1096,17 @@ html, body {
 :deep(.el-button-group > .el-button:last-child) {
   border-top-right-radius: 4px !important;
   border-bottom-right-radius: 4px !important;
+}
+
+/* 日期导航按钮样式 */
+.date-nav-buttons {
+  margin-right: 10px;
+  display: inline-flex;
+}
+
+.date-nav-buttons .el-button {
+  padding: 0 8px !important;
+  font-size: 11px !important;
 }
 
 /* 跌停池特殊样式 */
