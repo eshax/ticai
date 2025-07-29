@@ -38,6 +38,15 @@
               自动更新: {{ autoRefresh ? '开启' : '关闭' }}
               <span v-if="isAutoRefreshManuallySet" class="manual-indicator" title="已手动设置状态"></span>
             </span>
+            <span class="stat-separator">|</span>
+            <span 
+              class="update-tip-status cursor-pointer" 
+              :class="{ 'manually-set': isUpdateTipManuallySet }"
+              @click="toggleUpdateTip"
+            >
+              <i class="fa fa-bell" :class="{ 'fa-shake': showUpdateTip }"></i>
+              更新提示框: {{ showUpdateTip ? '开启' : '关闭' }}
+            </span>
           </div>
 
           <el-date-picker
@@ -54,7 +63,7 @@
       </div>
     </el-header>
 
-    <!-- 主内容区 - 包含12个表格，分上下两排各6个 -->
+    <!-- 主内容区 - 包含16个表格，分上下两排各8个 -->
     <el-main class="main-content">
       <!-- 数据更新提示 -->
       <div 
@@ -133,9 +142,9 @@
         style="margin: 40px 0"
       />
 
-      <!-- 12个表格容器 - 分为上下两排，每排6个 -->
-      <div v-else-if="!loading && !error" class="twelve-tables-container">
-        <!-- 上排6个表格 -->
+      <!-- 16个表格容器 - 分为上下两排各8个 -->
+      <div v-else-if="!loading && !error" class="sixteen-tables-container">
+        <!-- 上排8个表格 -->
         <div class="tables-row top-row">
           <div v-for="i in 8" :key="'top_' + i" class="table-wrapper">
             <div class="table-container">
@@ -214,7 +223,7 @@
           </div>
         </div>
         
-        <!-- 下排6个表格 -->
+        <!-- 下排8个表格 -->
         <div class="tables-row bottom-row">
           <div v-for="i in 8" :key="'bottom_' + i" class="table-wrapper">
             <div class="table-container">
@@ -556,6 +565,7 @@ const refreshInterval = ref(null);
 const timeCheckInterval = ref(null);
 const isRefreshing = ref(false);
 const showUpdateTip = ref(false);
+const isUpdateTipManuallySet = ref(false);
 const updatedStocks = ref({ added: [], removed: [], changed: [] });
 const groupExpandedState = ref({}); // 用于保存分组展开状态
 
@@ -615,9 +625,9 @@ const groupedStocks = computed(() => {
   return Object.values(groups).sort(groupSort);
 });
 
-// 将分组数据分配到12个表格中 - 前11个表格各放1个题材，第12个表格放剩余所有题材
+// 将分组数据分配到16个表格中 - 前15个表格各放1个题材，第16个表格放剩余所有题材
 const tablesData = computed(() => {
-  // 初始化12个表格容器
+  // 初始化16个表格容器
   const tables = Array(16).fill().map(() => ({ theme: '', stocks: [] }));
   
   // 如果没有题材数据，直接返回空表格
@@ -625,13 +635,13 @@ const tablesData = computed(() => {
     return tables;
   }
   
-  // 前11个表格各放1个题材
-  const first11Themes = groupedStocks.value.slice(0, 15);
-  first11Themes.forEach((group, index) => {
+  // 前15个表格各放1个题材
+  const first15Themes = groupedStocks.value.slice(0, 15);
+  first15Themes.forEach((group, index) => {
     tables[index] = { ...group };
   });
   
-  // 第12个表格放剩余所有题材（如果有的话）
+  // 第16个表格放剩余所有题材（如果有的话）
   const remainingThemes = groupedStocks.value.slice(15);
   if (remainingThemes.length > 0) {
     // 合并所有剩余题材的股票
@@ -747,10 +757,12 @@ const fetchStockData = async (isAutoRefresh = false) => {
       rawData.value = formattedNewData;
       updatedStocks.value = changes;
       
-      if (isAutoRefresh) {
+      if (isAutoRefresh && showUpdateTip.value) {
         showUpdateTip.value = true;
         setTimeout(() => {
-          hideUpdateTip();
+          if (showUpdateTip.value) {
+            hideUpdateTip();
+          }
         }, 15000);
       }
     } else {
@@ -876,6 +888,12 @@ const toggleAutoRefresh = () => {
   } else {
     stopAutoRefresh();
   }
+};
+
+// 切换更新提示状态
+const toggleUpdateTip = () => {
+  isUpdateTipManuallySet.value = true;
+  showUpdateTip.value = !showUpdateTip.value;
 };
 
 // 事件处理
@@ -1253,11 +1271,23 @@ html, body {
   font-size: 12px;
 }
 
-.auto-refresh-status:hover {
+.update-tip-status {
+  padding: 0 4px;
+  color: #faad14;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.2s ease;
+  position: relative;
+  padding-right: 15px;
+  font-size: 12px;
+}
+
+.auto-refresh-status:hover, .update-tip-status:hover {
   color: #722ed1;
 }
 
-.auto-refresh-status .manual-indicator {
+.auto-refresh-status .manual-indicator, .update-tip-status .manual-indicator {
   position: absolute;
   right: 2px;
   top: 50%;
@@ -1272,7 +1302,7 @@ html, body {
   color: #722ed1;
 }
 
-.auto-refresh-status.manually-set {
+.auto-refresh-status.manually-set, .update-tip-status.manually-set {
   font-weight: 500;
 }
 
@@ -1294,8 +1324,8 @@ html, body {
   overflow: hidden;
 }
 
-/* 12个表格容器 - 分为上下两排 */
-.twelve-tables-container {
+/* 16个表格容器 - 分为上下两排 */
+.sixteen-tables-container {
   display: flex;
   flex-direction: column;
   width: 100%;
