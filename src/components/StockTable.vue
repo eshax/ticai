@@ -215,34 +215,9 @@
 
                         </div>
                         <div class="list-item change-item">
-                          <!-- 涨幅部分添加分时图弹窗 -->
-                          <el-popover
-                            placement="right"
-                            width="580"
-                            trigger="hover"
-                            :teleported="true"
-                          >
-                            <template #default>
-                              <div class="chart-container">
-                                <div class="chart-loading" v-if="stockChartLoading[stock.symbol]">
-                                  <i class="fa fa-spinner fa-spin"></i> 加载中...
-                                </div>
-                                <iframe
-                                  :src="getSinaStockChartUrl(stock.symbol)"
-                                  frameborder="0"
-                                  width="100%"
-                                  height="300"
-                                  @load="stockChartLoading[stock.symbol] = false"
-                                  class="stock-chart-iframe"
-                                ></iframe>
-                              </div>
-                            </template>
-                            <template #reference>
-                              <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
-                                {{ (stock.change_percent * 100).toFixed(2) }}%
-                              </span>
-                            </template>
-                          </el-popover>
+                          <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
+                            {{ (stock.change_percent * 100).toFixed(2) }}%
+                          </span>
                         </div>
                       </div>
                     </div>
