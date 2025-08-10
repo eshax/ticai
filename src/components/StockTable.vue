@@ -300,34 +300,9 @@
 
                         </div>
                         <div class="list-item change-item">
-                          <!-- 涨幅部分添加分时图弹窗 -->
-                          <el-popover
-                            placement="right"
-                            width="580"
-                            trigger="hover"
-                            :teleported="true"
-                          >
-                            <template #default>
-                              <div class="chart-container">
-                                <div class="chart-loading" v-if="stockChartLoading[stock.symbol]">
-                                  <i class="fa fa-spinner fa-spin"></i> 加载中...
-                                </div>
-                                <iframe
-                                  :src="getSinaStockChartUrl(stock.symbol)"
-                                  frameborder="0"
-                                  width="100%"
-                                  height="300"
-                                  @load="stockChartLoading[stock.symbol] = false"
-                                  class="stock-chart-iframe"
-                                ></iframe>
-                              </div>
-                            </template>
-                            <template #reference>
-                              <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
-                                {{ (stock.change_percent * 100).toFixed(2) }}%
-                              </span>
-                            </template>
-                          </el-popover>
+                          <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
+                            {{ (stock.change_percent * 100).toFixed(2) }}%
+                          </span>                          
                         </div>
                       </div>
                     </div>
@@ -356,8 +331,7 @@ import axios from 'axios';
 import { 
   ElHeader, ElMain, ElTitle, 
   ElSkeleton, ElAlert, ElEmpty,
-  ElTooltip, ElButtonGroup, ElButton, ElDatePicker,
-  ElPopover  // 新增引入Popover组件
+  ElTooltip, ElButtonGroup, ElButton, ElDatePicker
 } from 'element-plus';
 
 // 定义数据源映射关系
@@ -374,20 +348,6 @@ const formatStockCode = (code) => {
   if (!code) return '';
   const numbers = code.match(/\d+/g);
   return numbers ? numbers.join('') : code;
-};
-
-// 获取新浪股票分时图URL
-const getSinaStockChartUrl = (symbol) => {
-  // 提取纯数字代码
-  const code = formatStockCode(symbol);
-  if (!code) return '';
-  
-  // 判断市场类型，生成对应的新浪财经URL
-  // 沪市股票代码以6开头，深市以0或3开头
-  let marketPrefix = code.startsWith('6') ? 'sh' : 'sz';
-  
-  // 新浪财经分时图URL
-  return `https://image.sinajs.cn/newchart/min/n/${marketPrefix}${code}.gif`;
 };
 
 // 日期处理工具
