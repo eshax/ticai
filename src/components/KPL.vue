@@ -1,146 +1,324 @@
 <template>
-  <div class="stock-data-container">
-    <!-- 顶部栏 - 完整保留原有样式结构 -->
-    <el-header class="page-header">
+  <div class="stock-page">
+    <!-- 顶部栏 - 始终置顶 -->
+    <el-header class="page-header fixed-header">
       <div class="header-container">
         <div class="header-title">
-          <el-title level="3">股票数据表现平台</el-title>
+          <el-title level="3">股票数据分析平台</el-title>
         </div>
 
         <div class="header-functions">
-          <!-- 仅保留要求的四个核心元素 -->
+          <!-- 数据源切换按钮组 -->
+          <el-button-group class="data-source-button-group">
+            <el-button 
+              v-for="(pool, key) in pools" 
+              :key="key"
+              :type="selectedPool === key ? 'primary' : 'default'"
+              size="small"
+              @click="selectedPool = key"
+              class="source-button"
+            >
+              {{ pool }}
+            </el-button>
+          </el-button-group>
+
           <div class="stats-wrapper">
-            <span class="stat-item">总股票数: {{ totalStocks }}</span>
+            <span class="stat-item">总股票数: {{ totalCount }}</span>
             <span class="stat-separator">|</span>
-            <span class="stat-item">题材数量: {{ totalThemes }}</span>
+            <span class="stat-item">题材数量: {{ groupedStocks.length }}</span>
             <span class="stat-separator">|</span>
-            <span class="stat-item">数据日期: {{ dataDate }}</span>
+            <span class="stat-item">数据日期: {{ selectedDate }}</span>
             <span class="stat-separator">|</span>
             <span 
               class="auto-refresh-status cursor-pointer" 
-              :class="{ refreshing: isRefreshing }"
+              :class="{ refreshing: isRefreshing, 'manually-set': isAutoRefreshManuallySet }"
               @click="toggleAutoRefresh"
             >
               <i class="fa fa-refresh" :class="{ 'fa-spin': isRefreshing }"></i>
               自动更新: {{ autoRefresh ? '开启' : '关闭' }}
+              <span v-if="isAutoRefreshManuallySet" class="manual-indicator" title="已手动设置状态"></span>
+            </span>
+            <span class="stat-separator">|</span>
+            <span 
+              class="update-tip-status cursor-pointer" 
+              :class="{ 'manually-set': isUpdateTipManuallySet }"
+              @click="toggleUpdateTip"
+            >
+              <i class="fa fa-bell" :class="{ 'fa-shake': showUpdateTip }"></i>
+              更新提示框: {{ showUpdateTip ? '开启' : '关闭' }}
             </span>
           </div>
+
+          <el-date-picker
+            v-model="selectedDate"
+            type="date"
+            placeholder="选日期"
+            :min-date="new Date('2020-01-01')"
+            :max-date="new Date()"
+            value-format="YYYY-MM-DD"
+            @change="handleDateChange"
+            class="date-picker"
+          />
+
+          <!-- 日期导航按钮组 -->
+          <el-button-group class="date-nav-buttons">
+            <el-button size="small" @click="navigateDate(-1)" :disabled="!canNavigateDate(-1)">
+              <i class="fa fa-chevron-left"></i>
+              上一日
+            </el-button>
+            <el-button size="small" @click="navigateDate(1)" :disabled="!canNavigateDate(1)">
+              <i class="fa fa-chevron-right"></i>
+              下一日
+            </el-button>
+          </el-button-group>
+
         </div>
       </div>
     </el-header>
 
-    <!-- 主内容区 - 完整功能布局 -->
+    <!-- 主内容区 - 包含16个表格，分上下两排各8个 -->
     <el-main class="main-content">
-      <!-- 数据加载状态 - 骨架屏 -->
+      <!-- 数据更新提示 -->
+      <div 
+        v-if="showUpdateTip" 
+        class="update-tip"
+        @click="hideUpdateTip"
+      >
+        <div class="update-tip-header">
+          <i class="fa fa-info-circle"></i> 数据已更新
+        </div>
+        <div class="update-details">
+          <div v-if="updatedStocks.added.length > 0" class="update-section">
+            <div class="section-title added-title">涨停 {{ updatedStocks.added.length }} 只股票:</div>
+            <ul class="stock-list">
+              <li v-for="stock in updatedStocks.added" :key="'added_' + stock.symbol" class="stock-item">
+                {{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})
+              </li>
+            </ul>
+          </div>
+          <div v-if="updatedStocks.removed.length > 0" class="update-section">
+            <div class="section-title removed-title">炸板 {{ updatedStocks.removed.length }} 只股票:</div>
+            <ul class="stock-list">
+              <li v-for="stock in updatedStocks.removed" :key="'removed_' + stock.symbol" class="stock-item">
+                {{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})
+              </li>
+            </ul>
+          </div>
+          <div v-if="updatedStocks.changed.length > 0" class="update-section">
+            <div class="section-title changed-title">变动 {{ updatedStocks.changed.length }} 只股票:</div>
+            <ul class="stock-list">
+              <li v-for="stock in updatedStocks.changed" :key="'changed_' + stock.symbol" class="stock-item">
+                <div class="stock-name">
+                  {{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})
+                </div>
+                <ul class="change-details">
+                  <li v-for="(change, idx) in stock.changes" :key="idx" class="change-detail">
+                    <span class="change-field">{{ getFieldName(change.field) }}:</span>
+                    <span class="old-value" v-if="change.oldValue !== undefined">{{ formatValue(change.field, change.oldValue) }}</span>
+                    <span class="change-arrow">→</span>
+                    <span class="new-value" :class="{ positive: isPositiveChange(change), negative: isNegativeChange(change) }">
+                      {{ formatValue(change.field, change.newValue) }}
+                    </span>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="update-tip-footer">点击关闭提示</div>
+      </div>
+
+      <!-- 加载状态 -->
       <el-skeleton active v-if="loading" class="loading-container">
         <template #template>
-          <div class="skeleton-content">
-            <div class="skeleton-search"></div>
-            <div class="skeleton-table-header"></div>
-            <div v-for="i in 10" :key="i" class="skeleton-table-row"></div>
+          <div style="padding: 20px;">
+            <div class="skeleton-group-header" style="height: 40px; background: #f5f5f5; margin-bottom: 10px;"></div>
+            <div v-for="i in 5" :key="i" style="height: 36px; background: #f5f5f5; margin-bottom: 5px;"></div>
           </div>
         </template>
       </el-skeleton>
 
-      <!-- 错误提示 - 详细错误信息 -->
+      <!-- 错误提示 -->
       <el-alert
         v-if="error"
         title="数据加载失败"
         :description="error"
         type="error"
         show-icon
-        class="error-alert"
+        style="margin: 10px 0 !important"
       />
 
       <!-- 无数据提示 -->
       <el-empty 
-        v-if="!loading && !error && totalStocks === 0" 
-        description="暂无股票数据"
-        class="empty-data"
+        v-if="!loading && !error && totalCount === 0" 
+        :description="isNonTradingDay ? '今日为非交易日，无数据' : '暂无符合条件的股票数据'"
+        style="margin: 40px 0"
       />
 
-      <!-- 股票数据展示 - 完整功能 -->
-      <div v-else-if="!loading && !error" class="stock-data-content">
-        <!-- 搜索框 -->
-        <div class="search-container">
-          <el-input
-            v-model="searchKeyword"
-            placeholder="搜索股票代码、名称或题材..."
-            prefix="el-icon-search"
-            class="search-input"
-            @input="handleSearch"
-          />
+      <!-- 16个表格容器 - 分为上下两排各8个 -->
+      <div v-else-if="!loading && !error" class="sixteen-tables-container">
+        <!-- 上排8个表格 -->
+        <div class="tables-row top-row">
+          <div v-for="i in 8" :key="'top_' + i" class="table-wrapper">
+            <div class="table-container">
+              <!-- 表格内容 -->
+              <div class="table-scrollable-content">
+                <div class="groups-container">
+                  <div 
+                    v-if="tablesData[i-1] && tablesData[i-1].theme" 
+                    class="theme-group"
+                  >
+                    <!-- 分组标题 -->
+                    <div class="group-header" @click="toggleGroup(tablesData[i-1].theme)">
+                      <div class="group-header-content">
+                        <i class="fa" :class="isGroupExpanded(tablesData[i-1].theme) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                        <span class="group-theme">
+                          {{ tablesData[i-1].theme }}
+                          <span class="group-count">({{ tablesData[i-1].stocks.length }})</span>
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <!-- 分组内股票列表 -->
+                    <div 
+                      class="group-stocks" 
+                      v-if="isGroupExpanded(tablesData[i-1].theme)"
+                    >
+                      <div 
+                        v-for="stock in tablesData[i-1].stocks" 
+                        :key="'top_' + i + '_' + stock.symbol + '_' + tablesData[i-1].theme"
+                        class="stock-list-item"
+                        :class="{ 
+                          'stock-updated': stock.wasUpdated,
+                          'multi-plate': stock.hasMultiplePlates,
+                          'limit-down': selectedPool === 'limit_down'
+                        }"
+                      >
+                        <div class="list-item boards-item">
+                          <span class="board-indicator" :class="{ 'down-indicator': selectedPool === 'limit_down' }">
+                            {{ stock.boardIndicator || '-' }}
+                          </span>
+                        </div>
+                        <div class="list-item name-item">
+                          <span class="stock-code">
+                            {{ formatStockCode(stock.symbol) }}
+                          </span>
+                          <el-tooltip placement="top">
+                            <template #content> 
+                              {{ stock.surge_reason.stock_reason || '无相关信息' }}
+                              <div v-if="stock.allThemes.length > 1" class="tooltip-themes">
+                                其他题材: {{ stock.allThemes.filter(t => t !== stock.displayTheme).join('、') }}
+                              </div>
+                            </template>
+                            <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                          </el-tooltip>
+
+                        </div>
+                        <div class="list-item change-item">
+                          <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
+                            {{ (stock.change_percent * 100).toFixed(2) }}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 空表格提示 -->
+                  <div v-else-if="i <= groupedStocks.length" class="empty-table-placeholder">
+                    加载中...
+                  </div>
+                  <div v-else class="empty-table-placeholder">
+                    无数据
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+        
+        <!-- 下排8个表格 -->
+        <div class="tables-row bottom-row">
+          <div v-for="i in 8" :key="'bottom_' + i" class="table-wrapper">
+            <div class="table-container">
+              <!-- 表格内容 -->
+              <div class="table-scrollable-content">
+                <div class="groups-container">
+                  <div 
+                    v-if="tablesData[i+7] && tablesData[i+7].theme" 
+                    class="theme-group"
+                  >
+                    <!-- 分组标题 -->
+                    <div class="group-header" @click="toggleGroup(tablesData[i+7].theme)">
+                      <div class="group-header-content">
+                        <i class="fa" :class="isGroupExpanded(tablesData[i+7].theme) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                        <span class="group-theme">
+                          {{ tablesData[i+7].theme }}
+                          <span class="group-count">({{ tablesData[i+7].stocks.length }})</span>
+                          <span v-if="i === 8 && groupedStocks.length > 16" class="overflow-indicator">（包含更多题材）</span>
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <!-- 分组内股票列表 -->
+                    <div 
+                      class="group-stocks" 
+                      v-if="isGroupExpanded(tablesData[i+7].theme)"
+                    >
+                      <div 
+                        v-for="stock in tablesData[i+7].stocks" 
+                        :key="'bottom_' + i + '_' + stock.symbol + '_' + tablesData[i+7].theme"
+                        class="stock-list-item"
+                        :class="{ 
+                          'stock-updated': stock.wasUpdated,
+                          'multi-plate': stock.hasMultiplePlates,
+                          'limit-down': selectedPool === 'limit_down',
+                          'with-theme-column': i === 8
+                        }"
+                      >
+                        <div class="list-item boards-item">
+                          <span class="board-indicator" :class="{ 'down-indicator': selectedPool === 'limit_down' }">
+                            {{ stock.boardIndicator || '-' }}
+                          </span>
+                        </div>
+                        <!-- 只有最后一个表格显示题材列内容 -->
+                        <div class="list-item name-item" :class="{ 'with-theme': i === 8 }">
+                          <span class="stock-code">
+                            {{ formatStockCode(stock.symbol) }}
+                          </span>                          
+                          <el-tooltip placement="top">
+                            <template #content> 
+                              {{ stock.surge_reason.stock_reason || '无相关信息' }}
+                              <div v-if="stock.allThemes.length > 1" class="tooltip-themes">
+                                其他题材: {{ stock.allThemes.filter(t => t !== stock.displayTheme).join('、') }}
+                              </div>
+                            </template>
+                            <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                          </el-tooltip>
 
-        <!-- 股票表格 -->
-        <div class="table-container">
-          <el-table
-            :data="paginatedStocks"
-            border
-            stripe
-            :header-cell-class-name="headerCellClass"
-            :row-class-name="rowClass"
-            class="stock-table"
-          >
-            <el-table-column
-              label="股票代码"
-              prop="code"
-              width="120"
-              sortable
-              @sort-change="handleSort('code')"
-            />
-            <el-table-column
-              label="股票名称"
-              prop="name"
-              width="120"
-              sortable
-              @sort-change="handleSort('name')"
-            />
-            <el-table-column
-              label="所属板块"
-              prop="sector"
-              width="150"
-              sortable
-              @sort-change="handleSort('sector')"
-            />
-            <el-table-column
-              label="所属题材"
-              prop="theme"
-              min-width="200"
-              sortable
-              @sort-change="handleSort('theme')"
-            />
-            <el-table-column
-              label="振幅"
-              prop="amplitude"
-              width="100"
-              sortable
-              @sort-change="handleSort('amplitude')"
-            >
-              <template #default="scope">
-                <span :class="scope.row.amplitude >= 0 ? 'text-danger' : 'text-success'">
-                  {{ scope.row.amplitude }}%
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column
-              label="题材编码"
-              prop="themeCode"
-              width="150"
-            />
-          </el-table>
 
-          <!-- 分页控件 -->
-          <el-pagination
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            :current-page="currentPage"
-            :page-sizes="[10, 20, 50, 100]"
-            :page-size="pageSize"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="filteredStocks.length"
-            class="pagination-container"
-          />
+                          <span v-if="i === 8" class="stock-theme truncate-text">{{ stock.displayTheme }}</span>
+
+                        </div>
+                        <div class="list-item change-item">
+                          <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
+                            {{ (stock.change_percent * 100).toFixed(2) }}%
+                          </span>                          
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 空表格提示 -->
+                  <div v-else-if="i+7 < groupedStocks.length" class="empty-table-placeholder">
+                    加载中...
+                  </div>
+                  <div v-else class="empty-table-placeholder">
+                    无数据
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </el-main>
@@ -148,623 +326,1377 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { 
-  ElHeader, ElMain, ElTitle, ElSkeleton, ElAlert, ElEmpty, 
-  ElTable, ElTableColumn, ElPagination, ElInput, ElMessage 
+  ElHeader, ElMain, ElTitle, 
+  ElSkeleton, ElAlert, ElEmpty,
+  ElTooltip, ElButtonGroup, ElButton, ElDatePicker
 } from 'element-plus';
 
-// 完整引入Element Plus样式（确保全局样式生效）
-import 'element-plus/dist/index.css';
-import 'element-plus/theme-chalk/el-skeleton.css';
-import 'element-plus/theme-chalk/el-alert.css';
-import 'element-plus/theme-chalk/el-empty.css';
-import 'element-plus/theme-chalk/el-table.css';
-import 'element-plus/theme-chalk/el-pagination.css';
-import 'element-plus/theme-chalk/el-input.css';
-import 'element-plus/theme-chalk/el-message.css';
+// 数据源映射关系已从 api/xgt.js 导入
 
-// 全局配置常量
-const API_BASE_URL = 'https://apphwshhq.longhuvip.com/w1/api/index.php';
-const PID_TYPES = [1, 2, 3, 4, 5]; // 需要请求的PID类型
-const DEFAULT_PAGE_SIZE = 20;       // 默认每页条数
-const REQUEST_TIMEOUT = 10000;      // 请求超时时间（10秒）
-const REFRESH_INTERVAL = 30000;     // 自动刷新间隔（30秒）
+// 股票代码格式化函数
+const formatStockCode = (code) => {
+  if (!code) return '';
+  const numbers = code.match(/\d+/g);
+  return numbers ? numbers.join('') : code;
+};
 
-// 状态管理 - 完整状态定义
-const allStocks = ref([]);          // 所有股票数据（去重后）
-const filteredStocks = ref([]);     // 搜索过滤后的股票数据
-const loading = ref(false);         // 加载状态
-const error = ref('');              // 错误信息
-const totalStocks = ref(0);         // 总股票数
-const totalThemes = ref(0);         // 题材数量（去重）
-const dataDate = ref('--');         // 数据日期
-const autoRefresh = ref(false);     // 自动刷新开关状态
-const isRefreshing = ref(false);    // 正在刷新标识
-const searchKeyword = ref('');      // 搜索关键词
-const currentPage = ref(1);         // 当前页码
-const pageSize = ref(DEFAULT_PAGE_SIZE); // 每页条数
-const sortField = ref(null);        // 排序字段
-const sortDirection = ref('asc');   // 排序方向（asc/desc）
+// 日期处理工具 - 现在从 common/date.js 导入
+// getToday
+// isWeekend
+// getLastWorkday
 
-// 计算属性 - 分页数据（根据当前页和每页条数计算）
-const paginatedStocks = computed(() => {
-  const startIndex = (currentPage.value - 1) * pageSize.value;
-  return filteredStocks.value.slice(startIndex, startIndex + pageSize.value);
-});
+// 日期导航功能 - 获取指定日期的前/后工作日
+// getAdjustedDate 函数现在从 utils/dateUtils.js 导入
 
-// 表格样式类 - 保持原有样式逻辑
-const headerCellClass = () => 'table-header-cell';
-const rowClass = () => 'table-row-cell';
-
-// 组件挂载时初始化数据
-onMounted(() => {
-  fetchAllStockData();  // 加载股票数据
-  checkCorsSupport();   // 检测跨域支持（辅助诊断）
-});
-
-// 组件卸载时清理资源
-onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval); // 清除自动刷新定时器
+// 检查是否可以导航到指定偏移的日期
+const canNavigateDate = (offset) => {
+  const date = new Date(selectedDate.value);
+  date.setDate(date.getDate() + offset);
+  
+  // 跳过周末计算有效日期
+  let adjustedDate = new Date(date);
+  let day = adjustedDate.getDay();
+  if (day === 0) { // 周日
+    adjustedDate.setDate(adjustedDate.getDate() + (offset > 0 ? 1 : -2));
+  } else if (day === 6) { // 周六
+    adjustedDate.setDate(adjustedDate.getDate() + (offset > 0 ? 2 : -1));
   }
+  
+  // 检查是否在有效范围内
+  const minDate = new Date('2020-01-01');
+  const maxDate = new Date();
+  
+  return adjustedDate >= minDate && adjustedDate <= maxDate;
+};
+
+// 日期导航处理函数
+const navigateDate = (offset) => {
+  if (!canNavigateDate(offset)) return;
+  
+  const newDate = getAdjustedDate(selectedDate.value, offset);
+  selectedDate.value = newDate;
+  handleDateChange(newDate);
+};
+
+// 时间检查函数
+const isWithinTradingHours = () => {
+  const now = new Date();
+  const hours = now.getHours();
+  return hours >= 9 && hours < 15;
+};
+
+// formatLimitTime 函数已迁移至 api/xgt.js
+
+// 提取板数（用于排序）
+const extractBoards = (text) => {
+  if (text.includes('/')) {
+    const parts = text.split('/');
+    return parts.length > 1 ? Number(parts[1]) || 0 : 0;
+  }
+  if (text === '-') return 0;
+  
+  const match = text.match(/(\d+)/);
+  return match ? Number(match[1]) : 0;
+};
+
+
+// ST股过滤
+// isSTStock 函数现在从 api/stock.js 导入
+
+// 比较新旧股票数据并获取具体变化内容
+const getStockChanges = (oldStock, newStock) => {
+  if (!oldStock || !newStock) return [];
+  
+  const changes = [];
+  const compareFields = [
+    { field: 'change_percent', label: '涨跌幅' },
+    { field: 'limitUpBoardsText', label: selectedPool.value === 'limit_down' ? '跌停板数' : '涨停板数' },
+    { field: 'breakLimitUpTimes', label: selectedPool.value === 'limit_down' ? '封板次数' : '开板次数' },
+    { field: 'first_limit_up', label: selectedPool.value === 'limit_down' ? '首次跌停' : '首次涨停' },
+    { field: 'hasMultiplePlates', label: '多板块属性' },
+    { field: 'boardIndicator', label: selectedPool.value === 'limit_down' ? '跌停板指标' : '涨停板指标' }
+  ];
+  
+  compareFields.forEach(({ field }) => {
+    if (oldStock[field] !== newStock[field]) {
+      changes.push({
+        field,
+        oldValue: oldStock[field],
+        newValue: newStock[field]
+      });
+    }
+  });
+  
+  return changes;
+};
+
+// 判断变化是否为正向
+const isPositiveChange = (change) => {
+  if (selectedPool.value === 'limit_down') {
+    if (change.field === 'change_percent') {
+      return change.newValue > (change.oldValue || 0);
+    }
+    return false;
+  }
+  
+  if (change.field === 'change_percent') {
+    return change.newValue > (change.oldValue || 0);
+  }
+  if (change.field === 'price') {
+    return change.newValue > (change.oldValue || 0);
+  }
+  if (change.field === 'limitUpBoardsText' || change.field === 'boardIndicator') {
+    const oldBoards = extractBoards(change.oldValue || '0');
+    const newBoards = extractBoards(change.newValue || '0');
+    return newBoards > oldBoards;
+  }
+  return false;
+};
+
+// 判断变化是否为负向
+const isNegativeChange = (change) => {
+  if (selectedPool.value === 'limit_down') {
+    if (change.field === 'change_percent') {
+      return change.newValue < (change.oldValue || 0);
+    }
+    return false;
+  }
+  
+  if (change.field === 'change_percent') {
+    return change.newValue < (change.oldValue || 0);
+  }
+  if (change.field === 'price') {
+    return change.newValue < (change.oldValue || 0);
+  }
+  if (change.field === 'limitUpBoardsText' || change.field === 'boardIndicator') {
+    const oldBoards = extractBoards(change.oldValue || '0');
+    const newBoards = extractBoards(change.newValue || '0');
+    return newBoards < oldBoards;
+  }
+  if (change.field === 'breakLimitUpTimes') {
+    return change.newValue > (change.oldValue || 0);
+  }
+  return false;
+};
+
+// 获取字段显示名称
+const getFieldName = (field) => {
+  const isDown = selectedPool.value === 'limit_down';
+  const fieldNames = {
+    'price': '当前价格',
+    'change_percent': '涨跌幅',
+    'limitUpBoardsText': isDown ? '跌停板数' : '涨停板数',
+    'breakLimitUpTimes': isDown ? '封板次数' : '开板次数',
+    'first_limit_up': isDown ? '首次跌停' : '首次涨停',
+    'hasMultiplePlates': '多板块属性',
+    'boardIndicator': isDown ? '跌停板指标' : '涨停板指标'
+  };
+  return fieldNames[field] || field;
+};
+
+// 格式化字段值用于显示
+const formatValue = (field, value) => {
+  switch (field) {
+    case 'price':
+      return `${value}元`;
+    case 'change_percent':
+      return `${(value * 100).toFixed(2)}%`;
+    case 'breakLimitUpTimes':
+      return value === 0 ? '-' : `${value}次`;
+    case 'hasMultiplePlates':
+      return value ? '是' : '否';
+    default:
+      return value;
+  }
+};
+
+// 找出新增、移除和变动的股票
+const findStockChanges = (oldData, newData) => {
+  // 去重处理原始数据
+  const uniqueOldData = Array.from(new Map(oldData.map(item => [item.symbol, item])).values());
+  const uniqueNewData = Array.from(new Map(newData.map(item => [item.symbol, item])).values());
+  
+  const oldSymbols = new Set(uniqueOldData.map(s => s.symbol));
+  const newSymbols = new Set(uniqueNewData.map(s => s.symbol));
+  
+  const added = uniqueNewData
+    .filter(stock => !oldSymbols.has(stock.symbol));
+  
+  const removed = uniqueOldData
+    .filter(stock => !newSymbols.has(stock.symbol));
+  
+  const changed = uniqueNewData
+    .filter(stock => oldSymbols.has(stock.symbol))
+    .map(stock => {
+      const oldStock = uniqueOldData.find(s => s.symbol === stock.symbol);
+      const changes = getStockChanges(oldStock, stock);
+      return {
+        ...stock,
+        changes: changes
+      };
+    })
+    .filter(stock => stock.changes.length > 0);
+  
+  return { added, removed, changed };
+};
+
+// 状态管理
+const rawData = ref([]);
+const loading = ref(true);
+const error = ref('');
+const today = getToday();
+const selectedDate = ref(isWeekend(today) ? getLastWorkday() : today);
+const selectedPool = ref('limit_up');
+const autoRefresh = ref(false);
+const isAutoRefreshManuallySet = ref(false);
+const refreshInterval = ref(null);
+const timeCheckInterval = ref(null);
+const isRefreshing = ref(false);
+const showUpdateTip = ref(false);
+const isUpdateTipManuallySet = ref(false);
+const updatedStocks = ref({ added: [], removed: [], changed: [] });
+const groupExpandedState = ref({}); // 用于保存分组展开状态
+const stockChartLoading = ref({}); // 用于跟踪股票图表加载状态
+
+// 计算属性
+const isToday = computed(() => selectedDate.value === today);
+const isNonTradingDay = computed(() => isWeekend(selectedDate.value));
+// 计算唯一股票总数
+const totalCount = computed(() => {
+  const uniqueSymbols = new Set();
+  rawData.value.forEach(stock => {
+    uniqueSymbols.add(stock.symbol);
+  });
+  return uniqueSymbols.size;
 });
 
-// 检测CORS支持情况（控制台输出，辅助诊断跨域问题）
-const checkCorsSupport = () => {
-  fetch(API_BASE_URL, { method: 'OPTIONS' })
-    .then(response => {
-      console.log('=== CORS 支持情况诊断 ===', {
-        '允许的来源': response.headers.get('Access-Control-Allow-Origin') || '不允许',
-        '允许的方法': response.headers.get('Access-Control-Allow-Methods') || '无',
-        '允许的请求头': response.headers.get('Access-Control-Allow-Headers') || '无',
-        '是否允许凭证': response.headers.get('Access-Control-Allow-Credentials') || '否'
-      });
-    })
-    .catch(err => {
-      console.warn('CORS 预检请求失败（可能是正常情况）:', err.message);
+// 按题材分组并排序 - 同一股票会出现在所有相关题材中
+const groupedStocks = computed(() => {
+  // 1. 按题材分组，同一股票会添加到所有相关题材中
+  const groups = {};
+  
+  rawData.value.forEach(stock => {
+    // 获取该股票的所有题材
+    const allThemes = stock.allThemes || [stock.primaryTheme];
+    
+    allThemes.forEach(theme => {
+      if (!groups[theme]) {
+        groups[theme] = {
+          theme,
+          stocks: [],
+          expanded: groupExpandedState.value[theme] !== undefined ? groupExpandedState.value[theme] : true
+        };
+      }
+      
+      // 创建一个带有当前显示题材的股票副本
+      const stockWithTheme = {
+        ...stock,
+        displayTheme: theme
+      };
+      
+      groups[theme].stocks.push(stockWithTheme);
     });
-};
+  });
+  
+  // 2. 对每个分组内的股票进行排序，同时去重
+  Object.values(groups).forEach(group => {
+    // 去重处理 - 确保同一股票在一个题材分组中只出现一次
+    const uniqueStocks = Array.from(new Map(
+      group.stocks.map(item => [item.symbol, item])
+    ).values());
+    
+    // 排序
+    uniqueStocks.sort(stockSortWithinGroup);
+    group.stocks = uniqueStocks;
+  });
+  
+  // 3. 对分组本身进行排序（按股票数量降序）
+  return Object.values(groups).sort(groupSort);
+});
 
-// 带超时的fetch请求（避免无限等待）
-const fetchWithTimeout = (url, options = {}) => {
-  return Promise.race([
-    fetch(url, options),
-    new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('请求超时（超过10秒）')), REQUEST_TIMEOUT)
-    )
-  ]);
-};
-
-// 核心功能：获取所有PID类型的股票数据并合并
-const fetchAllStockData = async () => {
-  loading.value = true;
-  isRefreshing.value = true;
-  error.value = '';
-  let successfulStocks = []; // 存储成功获取的股票数据
-  let errorMessages = [];    // 收集各PID的错误信息
-
-  try {
-    // 构建请求配置（模拟浏览器请求，减少跨域拦截概率）
-    const requestOptions = {
-      method: 'GET',
-      headers: {
-        'Referer': 'https://apphwshhq.longhuvip.com/',
-        'Origin': 'https://apphwshhq.longhuvip.com'
-      },
-      mode: 'cors',        // 明确跨域模式
-      credentials: 'omit', // 不发送身份凭证
-      cache: 'no-cache'    // 禁用缓存
+// 将分组数据分配到16个表格中 - 前15个表格各放1个题材，第16个表格放剩余所有题材
+const tablesData = computed(() => {
+  // 初始化16个表格容器
+  const tables = Array(16).fill().map(() => ({ theme: '', stocks: [] }));
+  
+  // 如果没有题材数据，直接返回空表格
+  if (groupedStocks.value.length === 0) {
+    return tables;
+  }
+  
+  // 前15个表格各放1个题材
+  const first15Themes = groupedStocks.value.slice(0, 15);
+  first15Themes.forEach((group, index) => {
+    tables[index] = { ...group };
+  });
+  
+  // 第16个表格放剩余所有题材（如果有的话）
+  const remainingThemes = groupedStocks.value.slice(15);
+  if (remainingThemes.length > 0) {
+    // 合并所有剩余题材的股票
+    const allStocks = remainingThemes.flatMap(group => group.stocks);
+    // 对合并后的股票重新排序
+    allStocks.sort(stockSortWithinGroup);
+    
+    tables[15] = {
+      theme: `其他题材`,
+      stocks: allStocks
     };
+  }
+  
+  return tables;
+});
 
-    // 并行请求所有PID类型的数据（使用allSettled允许部分失败）
-    const promises = PID_TYPES.map(pidType => 
-      fetchWithTimeout(
-        `${API_BASE_URL}?PidType=${pidType}&a=DailyLimitPerformance&c=HomeDingPan`,
-        requestOptions
-      )
-      .then(async response => {
-        // 处理HTTP状态码错误
-        if (!response.ok) {
-          throw new Error(`HTTP错误: 状态码 ${response.status} (PID: ${pidType})`);
-        }
+// 检查分组是否展开
+const isGroupExpanded = (theme) => {
+  // 如果从未设置过，默认展开
+  if (groupExpandedState.value[theme] === undefined) {
+    return true;
+  }
+  return groupExpandedState.value[theme];
+};
 
-        // 处理响应数据（先转文本，避免JSON解析失败崩溃）
-        const responseText = await response.text();
-        try {
-          return JSON.parse(responseText);
-        } catch (parseErr) {
-          throw new Error(`数据解析失败 (PID: ${pidType}): 响应格式不是合法JSON`);
-        }
-      })
-      .catch(err => {
-        // 收集单个PID的错误，不中断整体流程
-        errorMessages.push(err.message);
-        return null;
-      })
+// 分组排序函数（按股票数量降序）
+const groupSort = (a, b) => {
+  // 先按股票数量排序
+  if (a.stocks.length !== b.stocks.length) {
+    return b.stocks.length - a.stocks.length;
+  }
+  
+  // 数量相同则按题材名称排序
+  return a.theme.localeCompare(b.theme);
+};
+
+// 分组内股票排序函数
+const stockSortWithinGroup = (a, b) => {
+  const isDown = selectedPool.value === 'limit_down';
+  
+  // 1. 按板数排序（降序）
+  const boardsA = extractBoards(a.limitUpBoardsText || '0');
+  const boardsB = extractBoards(b.limitUpBoardsText || '0');
+  if (boardsA !== boardsB) {
+    return boardsB - boardsA;
+  }
+  
+  // 2. 按时间排序（升序）
+  const timeA = a.first_limit_up === '-' ? '24:00:00' : a.first_limit_up;
+  const timeB = b.first_limit_up === '-' ? '24:00:00' : b.first_limit_up;
+  if (timeA !== timeB) {
+    return timeA.localeCompare(timeB);
+  }
+  
+  // 3. 按涨幅排序
+  return isDown ? a.change_percent - b.change_percent : b.change_percent - a.change_percent;
+};
+
+// 切换分组展开/折叠状态
+const toggleGroup = (theme) => {
+  groupExpandedState.value[theme] = !isGroupExpanded(theme);
+};
+
+// 时间检查函数
+const checkTimeAndUpdateStatus = () => {
+  if (!isToday.value) return; 
+  if (isAutoRefreshManuallySet.value) return;
+  
+  const shouldBeActive = isWithinTradingHours();
+  
+  if (autoRefresh.value !== shouldBeActive) {
+    autoRefresh.value = shouldBeActive;
+    if (autoRefresh.value) {
+      startAutoRefresh();
+    } else {
+      stopAutoRefresh();
+    }
+  }
+};
+
+import { fetchStockPoolData, pools, isSTStock, formatStockData } from '../api/kpl.js';
+import { getAdjustedDate, getToday, isWeekend, getLastWorkday } from '../common/date.js';
+
+// 数据请求与过滤
+const fetchStockData = async (isAutoRefresh = false) => {
+  if (isAutoRefresh && !autoRefresh.value) return;
+  if (isRefreshing.value) return;
+  
+  isRefreshing.value = true;
+  try {
+    // 保存原始数据用于比较变化（去重）
+    const uniqueOldData = Array.from(new Map(rawData.value.map(item => [item.symbol, item])).values());
+    const isDown = selectedPool.value === 'limit_down';
+    
+    // 使用API函数获取数据
+    const stockPoolData = await fetchStockPoolData(
+      selectedPool.value, 
+      selectedDate.value !== today ? selectedDate.value : null
     );
-
-    // 等待所有请求完成（无论成功失败）
-    const results = await Promise.allSettled(promises);
-
-    // 处理成功的响应数据
-    results.forEach((result, index) => {
-      if (result.status === 'fulfilled' && result.value) {
-        const data = result.value;
-        // 校验数据格式是否正确
-        if (data && data.info && Array.isArray(data.info)) {
-          // 按照要求解析指定列数据
-          const stocks = data.info.map(stockData => ({
-            code: stockData[0] || '',        // 第1列：股票代码
-            name: stockData[1] || '',        // 第2列：股票名称
-            theme: stockData[5] || '',       // 第6列：所属题材
-            sector: stockData[12] || '',     // 第13列：所属板块
-            amplitude: parseFloat(stockData[17]) || 0,   // 第18列：振幅（转为数字）
-            themeCode: stockData[18] || ''   // 第19列：题材编码
-          }));
-          successfulStocks.push(...stocks);
-        } else {
-          errorMessages.push(`数据格式错误 (PID: ${PID_TYPES[index]}): 缺少info数组或格式异常`);
+    
+    // 过滤掉ST股票
+    const newData = stockPoolData.filter(stock => !isSTStock(stock.stock_chi_name));
+      
+    const formattedNewData = newData.map(stock => formatStockData(stock, isDown));
+    const changes = findStockChanges(uniqueOldData, formattedNewData);
+    const hasSignificantChanges = changes.added.length > 0 || changes.removed.length > 0 || changes.changed.length > 0;
+    
+    if (hasSignificantChanges) {
+      formattedNewData.forEach(stock => {
+        const isChanged = changes.changed.some(s => s.symbol === stock.symbol);
+        stock.wasUpdated = isChanged || changes.added.some(s => s.symbol === stock.symbol);
+        stock.updateTime = new Date().toISOString();
+        
+        // 初始化图表加载状态
+        if (!stockChartLoading.value[stock.symbol]) {
+          stockChartLoading.value[stock.symbol] = true;
         }
-      }
-    });
-
-    // 处理去重和统计信息
-    if (successfulStocks.length > 0) {
-      // 根据股票代码去重（避免重复数据）
-      const uniqueStocks = [...new Map(successfulStocks.map(item => [item.code, item])).values()];
-      allStocks.value = uniqueStocks;
-      filteredStocks.value = uniqueStocks;
-
-      // 更新统计数据
-      totalStocks.value = uniqueStocks.length;
+      });
       
-      // 计算题材数量（去重，过滤空值）
-      const uniqueThemes = new Set(uniqueStocks.map(stock => stock.themeCode).filter(Boolean));
-      totalThemes.value = uniqueThemes.size;
-
-      // 获取最新的数据日期
-      const availableDates = results
-        .filter(r => r.status === 'fulfilled' && r.value?.day)
-        .map(r => r.value.day)
-        .filter(Boolean);
+      rawData.value = formattedNewData;
+      updatedStocks.value = changes;
       
-      if (availableDates.length > 0) {
-        // 排序后取最新日期（降序排序取第一个）
-        dataDate.value = availableDates.sort((a, b) => new Date(b) - new Date(a))[0];
+      if (isAutoRefresh && showUpdateTip.value) {
+        showUpdateTip.value = true;
+        setTimeout(() => {
+          if (showUpdateTip.value) {
+            hideUpdateTip();
+          }
+        }, 15000);
       }
-
-      // 应用排序（如果有排序字段）
-      sortStocks();
+    } else {
+      formattedNewData.forEach(stock => {
+        const oldStock = uniqueOldData.find(s => s.symbol === stock.symbol);
+        if (oldStock) {
+          stock.wasUpdated = oldStock.wasUpdated;
+        }
+        
+        // 初始化图表加载状态
+        if (!stockChartLoading.value[stock.symbol]) {
+          stockChartLoading.value[stock.symbol] = true;
+        }
+      });
+      rawData.value = formattedNewData;
     }
-
-    // 处理错误信息展示
-    if (errorMessages.length > 0) {
-      const errorSummary = `部分数据源加载失败（${errorMessages.length}/${PID_TYPES.length}）`;
-      
-      // 全部失败时显示错误Alert
-      if (errorMessages.length === PID_TYPES.length) {
-        error.value = `${errorSummary}：\n${errorMessages.join('\n')}\n\n可能原因：\n1. 浏览器跨域限制（需后端代理）\n2. API接口不可用或访问受限\n3. 网络连接异常`;
-      } else {
-        // 部分失败时仅显示警告消息
-        ElMessage.warning({
-          message: `${errorSummary}，已加载可用数据`,
-          duration: 5000
-        });
-        console.warn('数据源加载警告:', errorMessages);
-      }
-    }
-
-    // 无任何数据且无错误的特殊情况
-    if (successfulStocks.length === 0 && errorMessages.length === 0) {
-      error.value = '未获取到任何股票数据，API返回为空';
-    }
-
-  } catch (globalErr) {
-    // 捕获全局异常（非单个请求的错误）
-    console.error('全局数据加载错误:', globalErr);
-    error.value = `数据加载异常：${globalErr.message}\n\n请检查网络连接或稍后重试`;
+    
+    error.value = '';
+  } catch (err) {
+    error.value = `请求失败: ${err.message || '请检查网络'}`;
   } finally {
-    // 无论成功失败，都关闭加载状态
     loading.value = false;
     isRefreshing.value = false;
   }
 };
 
-// 排序处理函数
-const sortStocks = () => {
-  if (!sortField.value) return;
+// formatStockData 函数已迁移至 api/xgt.js
 
-  filteredStocks.value.sort((a, b) => {
-    let valueA, valueB;
+// getLimitDisplayText 函数已迁移至 api/xgt.js
 
-    // 振幅字段按数字排序，其他字段按字符串排序
-    if (sortField.value === 'amplitude') {
-      valueA = a[sortField.value] || 0;
-      valueB = b[sortField.value] || 0;
+// 自动刷新相关函数
+const startAutoRefresh = () => {
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value);
+  }
+  
+  refreshInterval.value = setInterval(() => {
+    fetchStockData(true);
+  }, 3000);
+  
+  fetchStockData(true);
+};
+
+const stopAutoRefresh = () => {
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value);
+    refreshInterval.value = null;
+  }
+};
+
+// 切换自动更新状态
+const toggleAutoRefresh = () => {
+  if (!isToday.value) return;
+  
+  isAutoRefreshManuallySet.value = true;
+  autoRefresh.value = !autoRefresh.value;
+  
+  if (autoRefresh.value) {
+    startAutoRefresh();
+  } else {
+    stopAutoRefresh();
+  }
+};
+
+// 切换更新提示状态
+const toggleUpdateTip = () => {
+  isUpdateTipManuallySet.value = true;
+  showUpdateTip.value = !showUpdateTip.value;
+};
+
+// 事件处理
+const handleDateChange = (date) => {
+  if (date) {
+    isAutoRefreshManuallySet.value = false;
+    loading.value = true;
+    fetchStockData();
+    
+    if (date === today) {
+      checkTimeAndUpdateStatus();
     } else {
-      valueA = a[sortField.value]?.toLowerCase() || '';
-      valueB = b[sortField.value]?.toLowerCase() || '';
+      autoRefresh.value = false;
+      stopAutoRefresh();
     }
+  }
+};
 
-    // 根据排序方向返回比较结果
-    if (valueA < valueB) return sortDirection.value === 'asc' ? -1 : 1;
-    if (valueA > valueB) return sortDirection.value === 'asc' ? 1 : -1;
-    return 0;
+// 切换数据源处理函数
+const handlePoolChange = () => {
+  isAutoRefreshManuallySet.value = false;
+  loading.value = true;
+  showUpdateTip.value = false;
+  fetchStockData();
+  
+  if (selectedDate.value === today) {
+    checkTimeAndUpdateStatus();
+  } else {
+    autoRefresh.value = false;
+    stopAutoRefresh();
+  }
+};
+
+const hideUpdateTip = () => {
+  showUpdateTip.value = false;
+  rawData.value.forEach(stock => {
+    stock.wasUpdated = false;
   });
 };
 
-// 处理表格列排序事件
-const handleSort = (field) => {
-  if (sortField.value === field) {
-    // 同一字段切换排序方向
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    // 不同字段默认升序
-    sortField.value = field;
-    sortDirection.value = 'asc';
+// 初始化和清理
+onMounted(() => {
+  fetchStockData();
+  timeCheckInterval.value = setInterval(checkTimeAndUpdateStatus, 60000);
+  checkTimeAndUpdateStatus();
+  
+  watch(selectedPool, handlePoolChange);
+});
+
+onUnmounted(() => {
+  stopAutoRefresh();
+  if (timeCheckInterval.value) {
+    clearInterval(timeCheckInterval.value);
+    timeCheckInterval.value = null;
   }
-  sortStocks();
-};
+});
 
-// 搜索处理函数
-const handleSearch = () => {
-  const keyword = searchKeyword.value.toLowerCase().trim();
-  currentPage.value = 1; // 搜索后重置到第一页
-
-  if (!keyword) {
-    // 无关键词时显示所有数据
-    filteredStocks.value = [...allStocks.value];
+// 监听日期变化
+watch(selectedDate, (newVal) => {
+  if (newVal === today) {
+    checkTimeAndUpdateStatus();
   } else {
-    // 按关键词过滤（支持多字段搜索）
-    filteredStocks.value = allStocks.value.filter(stock => 
-      stock.code.toLowerCase().includes(keyword) ||
-      stock.name.toLowerCase().includes(keyword) ||
-      stock.theme.toLowerCase().includes(keyword) ||
-      stock.sector.toLowerCase().includes(keyword) ||
-      stock.themeCode.toLowerCase().includes(keyword)
-    );
+    autoRefresh.value = false;
+    stopAutoRefresh();
+    isAutoRefreshManuallySet.value = false;
   }
-
-  // 过滤后应用排序
-  sortStocks();
-};
-
-// 分页 - 每页条数改变事件
-const handleSizeChange = (val) => {
-  pageSize.value = val;
-  currentPage.value = 1; // 改变每页条数后重置到第一页
-};
-
-// 分页 - 当前页码改变事件
-const handleCurrentChange = (val) => {
-  currentPage.value = val;
-};
-
-// 自动刷新控制函数
-let refreshInterval = null;
-const toggleAutoRefresh = () => {
-  autoRefresh.value = !autoRefresh.value;
-
-  if (autoRefresh.value) {
-    // 开启自动刷新
-    refreshInterval = setInterval(() => {
-      fetchAllStockData();
-    }, REFRESH_INTERVAL);
-    
-    // 立即刷新一次
-    fetchAllStockData();
-    ElMessage.success('自动更新已开启（每30秒刷新一次）');
-  } else {
-    // 关闭自动刷新
-    clearInterval(refreshInterval);
-    ElMessage.info('自动更新已关闭');
-  }
-};
+});
 </script>
 
 <style scoped>
-/* 基础容器样式 - 完整保留原有布局 */
-.stock-data-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #f5f5f5;
-  padding-bottom: 20px;
+/* 全局样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: 12px;
 }
 
-/* 顶部栏样式 - 完整保留原有设计 */
+html, body {
+  overflow: hidden !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: #f9f9f9 !important;
+  color: #333 !important;
+}
+
+.stock-page {
+  height: 98vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9f9f9;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* 解决内容溢出问题 - 长文本截断 */
+.truncate-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+/* 数据源按钮组样式 */
+.data-source-button-group {
+  margin-right: 15px;
+  display: inline-flex;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.source-button {
+  padding: 0 8px !important;
+  font-size: 12px !important;
+  border-radius: 0 !important;
+}
+
+:deep(.el-button-group > .el-button:not(:last-child)) {
+  border-right: none !important;
+}
+
+:deep(.el-button-group > .el-button:first-child) {
+  border-top-left-radius: 4px !important;
+  border-bottom-left-radius: 4px !important;
+}
+
+:deep(.el-button-group > .el-button:last-child) {
+  border-top-right-radius: 4px !important;
+  border-bottom-right-radius: 4px !important;
+}
+
+/* 日期导航按钮样式 */
+.date-nav-buttons {
+  margin-right: 10px;
+  display: inline-flex;
+}
+
+.date-nav-buttons .el-button {
+  padding: 0 8px !important;
+  font-size: 11px !important;
+}
+
+/* 跌停池特殊样式 */
+.limit-down .stock-name {
+  color: #1890ff;
+}
+
+.down-indicator {
+  color: #1890ff;
+  background-color: rgba(24, 144, 255, 0.1);
+}
+
+/* 提示框中的其他题材信息 */
+.tooltip-themes {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #ff0000;
+  padding-top: 3px;
+  border-top: 1px dashed #eee;
+}
+
+/* 数据更新提示 */
+.update-tip {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #722ed1;
+  border-radius: 4px;
+  font-size: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 900;
+  width: 420px;
+  max-height: 450px;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+.update-tip-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  font-weight: 500;
+  color: #722ed1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.update-details {
+  padding: 8px 12px;
+}
+
+.update-section {
+  margin-bottom: 12px;
+}
+
+.update-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 12px;
+  margin-bottom: 6px;
+  font-weight: 500;
+  padding-left: 5px;
+}
+
+.added-title {
+  color: #ff4d4f;
+}
+
+.removed-title {
+  color: #52c41a;
+}
+
+.changed-title {
+  color: #faad14;
+}
+
+.stock-list {
+  padding-left: 20px;
+  font-size: 12px;
+}
+
+.stock-item {
+  margin-bottom: 8px;
+  line-height: 1.4;
+  padding: 4px;
+  border-radius: 3px;
+  background-color: #ffffff;
+}
+
+.stock-item:last-child {
+  margin-bottom: 0;
+}
+
+.stock-name {
+  font-weight: 500;
+  margin-bottom: 3px;
+  font-size: 12px;
+}
+
+.change-details {
+  padding-left: 15px;
+  margin-top: 4px;
+}
+
+.change-detail {
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.change-field {
+  color: #666;
+  min-width: 70px;
+  font-size: 12px;
+}
+
+.old-value {
+  text-decoration: line-through;
+  color: #999;
+  margin: 0 4px;
+  font-size: 12px;
+}
+
+.change-arrow {
+  color: #ccc;
+  margin: 0 2px;
+  font-size: 12px;
+}
+
+.new-value {
+  font-weight: 500;
+  margin: 0 4px;
+  font-size: 12px;
+}
+
+.new-value.positive, .change-detail:has(.new-value.positive) .change-arrow {
+  color: #ff4d4f;
+}
+
+.new-value.negative, .change-detail:has(.new-value.negative) .change-arrow {
+  color: #52c41a;
+}
+
+.update-tip-footer {
+  padding: 6px 12px;
+  border-top: 1px solid #eee;
+  font-size: 10px;
+  color: #666;
+  text-align: right;
+  cursor: pointer;
+}
+
+.update-tip-footer:hover {
+  background-color: #f5f5f5;
+}
+
+/* 顶部栏样式 - 固定置顶 */
 .page-header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  height: 60px !important;
+  padding: 0 20px !important;
+  margin: 0 !important;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 0 20px;
-  height: 64px !important;
-  line-height: 64px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  width: 100%;
+  z-index: 1000;
+  flex-shrink: 0;
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 
 .header-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   height: 100%;
 }
 
 .header-title {
-  display: flex;
-  align-items: center;
-  height: 100%;
+  flex: 0 0 auto;
+  padding-right: 12px;
+  white-space: nowrap;
 }
 
-.header-title ::v-deep .el-title {
+.header-title .el-title {
   margin: 0 !important;
-  font-size: 18px !important;
-  font-weight: 500 !important;
+  font-size: 14px !important;
+  line-height: 50px;
+  color: #333 !important;
 }
 
 .header-functions {
   display: flex;
   align-items: center;
+  flex: 1 1 auto;
   height: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
 }
 
-/* 统计信息样式 - 完整保留 */
+.header-functions::-webkit-scrollbar {
+  display: none;
+}
+
 .stats-wrapper {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 16px;
-  font-size: 14px;
+  font-size: 10px;
+  white-space: nowrap;
   color: #666;
-  margin: 0;
-  padding: 0;
 }
 
 .stat-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 100%;
+  padding: 0 4px;
 }
 
 .stat-separator {
-  color: #e0e0e0;
-  font-size: 16px;
+  color: #ddd;
+  padding: 0 2px;
 }
 
 .auto-refresh-status {
+  padding: 0 4px;
+  color: #1890ff;
   display: flex;
   align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  gap: 3px;
+  transition: color 0.2s ease;
+  position: relative;
+  padding-right: 15px;
+  font-size: 12px;
 }
 
-.auto-refresh-status:hover {
-  background-color: #f5f5f5;
-}
-
-.auto-refresh-status .fa-refresh {
-  font-size: 14px;
-}
-
-/* 主内容区样式 - 完整保留 */
-.main-content {
-  margin-top: 16px;
-  padding: 0 20px;
-  flex: 1;
-}
-
-/* 错误提示样式 */
-.error-alert {
-  margin: 16px 0 !important;
-}
-
-/* 无数据提示样式 */
-.empty-data {
-  margin: 60px 0 !important;
+.update-tip-status {
+  padding: 0 4px;
+  color: #faad14;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.2s ease;
+  position: relative;
+  padding-right: 15px;
+  font-size: 12px;
 }
 
-/* 搜索框样式 */
-.search-container {
-  margin: 16px 0;
+.auto-refresh-status:hover, .update-tip-status:hover {
+  color: #722ed1;
 }
 
-.search-input {
-  width: 100%;
-  max-width: 600px;
+.auto-refresh-status .manual-indicator, .update-tip-status .manual-indicator {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #faad14;
 }
 
-/* 表格容器样式 */
-.table-container {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+.auto-refresh-status.refreshing {
+  color: #722ed1;
+}
+
+.auto-refresh-status.manually-set, .update-tip-status.manually-set {
+  font-weight: 500;
+}
+
+.date-picker {
+  width: 130px !important;
+  font-size: 10px !important;
+  margin: 0 !important;
+}
+
+/* 主内容区样式 - 占据剩余空间，在顶部栏下方 */
+.main-content {
+  padding: 10px !important;
+  margin: 0 !important;
+  margin-top: 60px !important;
+  background-color: #f9f9f9 !important;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
-/* 表格样式 - 完整保留原有设计 */
-.stock-table {
-  width: 100%;
-  border: none !important;
-}
-
-::v-deep .el-table__header-wrapper {
-  background-color: #f8f9fa;
-}
-
-::v-deep .el-table__header th {
-  background-color: #f8f9fa !important;
-  color: #666 !important;
-  font-weight: 500 !important;
-  border-bottom: 1px solid #e0e0e0 !important;
-  height: 48px !important;
-  line-height: 48px !important;
-}
-
-::v-deep .el-table__body tr {
-  height: 44px !important;
-}
-
-::v-deep .el-table__body td {
-  border-bottom: 1px solid #f5f5f5 !important;
-  color: #333 !important;
-}
-
-::v-deep .el-table__row:hover td {
-  background-color: #fafafa !important;
-}
-
-::v-deep .el-table--striped .el-table__body tr.el-table__row--striped td {
-  background-color: #fafafa !important;
-}
-
-::v-deep .el-table-column {
-  text-align: left;
-}
-
-/* 分页样式 */
-.pagination-container {
-  margin: 16px 0 !important;
-  padding: 16px;
-  text-align: right;
-  border-top: 1px solid #f5f5f5;
-}
-
-::v-deep .el-pagination {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-/* 颜色样式 - 完整保留 */
-.text-danger {
-  color: #f5222d !important;
-}
-
-.text-success {
-  color: #52c41a !important;
-}
-
-/* 骨架屏样式 - 完整保留 */
-.loading-container {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
-  margin: 16px 0;
-}
-
-.skeleton-content {
+/* 16个表格容器 - 分为上下两排 */
+.sixteen-tables-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  width: 100%;
+  height: 100%;
+  gap: 10px;
+  overflow: hidden;
 }
 
-.skeleton-search {
-  height: 40px;
-  background: #f5f5f5;
+/* 表格行容器 */
+.tables-row {
+  display: flex;
+  width: 100%;
+  flex: 1;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 5px;
+}
+
+.tables-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tables-row::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 3px;
+}
+
+.tables-row::-webkit-scrollbar-track {
+  background-color: #f5f5f5;
+}
+
+/* 单个表格容器 */
+.table-wrapper {
+  flex: 1;
+  min-width: 220px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 最后一个表格宽度调整以容纳题材列 */
+.tables-row.bottom-row .table-wrapper:nth-child(8) {
+  min-width: 220px;
+}
+
+/* 表格内容容器 */
+.table-container {
+  width: 100%;
+  border: 1px solid #e8e8e8;
   border-radius: 4px;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.skeleton-table-header {
-  height: 48px;
+/* 表格滚动内容区 */
+.table-scrollable-content {
+  overflow-y: auto;
+  flex-grow: 1;
+  min-height: 0;
+}
+
+.table-scrollable-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.table-scrollable-content::-webkit-scrollbar-track {
   background: #f5f5f5;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
-.skeleton-table-row {
-  height: 44px;
-  background: #f5f5f5;
-  border-radius: 4px;
+.table-scrollable-content::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 3px;
 }
 
-/* 响应式样式 - 完整保留原有适配 */
+.table-scrollable-content::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+/* 分组容器 */
+.groups-container {
+  width: 100%;
+}
+
+/* 空表格占位符 */
+.empty-table-placeholder {
+  text-align: center;
+  padding: 15px 0;
+  color: #999;
+  font-size: 12px;
+}
+
+/* 题材分组 */
+.theme-group {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.theme-group:last-child {
+  border-bottom: none;
+}
+
+/* 分组标题 */
+.group-header {
+  background-color: #f7f7fa;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.group-header:hover {
+  background-color: #f0f0f5;
+}
+
+.group-header-content {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+}
+
+.group-header-content .fa {
+  margin-right: 5px;
+  color: #999;
+  transition: transform 0.2s;
+  width: 12px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.group-theme {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.group-count {
+  font-size: 9px;
+  color: #722ed1;
+  background-color: rgba(114, 46, 209, 0.1);
+  padding: 0 3px;
+  border-radius: 6px;
+  font-weight: normal;
+}
+
+/* 溢出题材指示器 */
+.overflow-indicator {
+  font-size: 9px;
+  color: #faad14;
+  margin-left: 5px;
+}
+
+/* 分组内股票列表 */
+.group-stocks {
+  transition: max-height 0.3s ease-out;
+  overflow: hidden;
+}
+
+/* 列表项 */
+.stock-list-item {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: background-color 0.2s;
+  height: 32px;
+}
+
+/* 带题材列的列表项 */
+.stock-list-item.with-theme-column {
+  min-width: 300px;
+}
+
+.stock-list-item:last-child {
+  border-bottom: none;
+}
+
+.stock-list-item:hover {
+  background-color: #f9f9f9;
+}
+
+.stock-list-item.stock-updated {
+  background-color: #ffffff;
+  animation: pulse 2s ease-in-out;
+}
+
+.stock-list-item.multi-plate {
+  background-color: #f0f7ff;
+}
+
+.stock-list-item.limit-down {
+  background-color: #f6ffed;
+}
+
+@keyframes pulse {
+  0% { background-color: #ffffff; }
+  50% { background-color: #ffffff; }
+  100% { background-color: #ffffff; }
+}
+
+/* 列表项内容 */
+.list-item {
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+}
+
+.list-item:last-child {
+  border-right: none;
+}
+
+.boards-item {
+  width: 40px;
+  justify-content: center;
+}
+
+/* 题材列内容样式 */
+.theme-item {
+  width: 100px;
+  white-space: nowrap;
+}
+
+.stock-theme {
+  font-size: 11px;
+  color: #722ed1;
+  font-weight: 500;
+}
+
+.name-item {
+  flex-grow: 1;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 有题材列时调整名称列 */
+.name-item.with-theme {
+  min-width: 80px;
+}
+
+.change-item {
+  width: 70px;
+  justify-content: center;
+}
+
+/* 板数指标样式 */
+.board-indicator {
+  font-size: 9px;
+  font-weight: 600;
+  color: #722ed1;
+  background-color: rgba(114, 46, 209, 0.1);
+  padding: 1px 3px;
+  border-radius: 2px;
+  min-width: 16px;
+  display: inline-block;
+  text-align: center;
+}
+
+/* 股票名称样式 */
+.stock-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* 股票代码样式 */
+.stock-code {
+  font-size: 9px;
+  color: #666;
+  margin-left: 3px;
+}
+
+/* 涨跌幅样式 */
+.change-percent {
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer; /* 提示用户这里可以交互 */
+}
+
+.positive {
+  color: #ff4d4f;
+}
+
+.negative {
+  color: #52c41a;
+}
+
+/* 分时图弹窗样式 */
+:deep(.el-popover) {
+  padding: 0 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.chart-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+
+.stock-chart-iframe {
+  border-radius: 6px;
+}
+
+/* 提示组件样式 */
+:deep(.el-alert) {
+  margin: 8px 0 !important;
+  font-size: 11px !important;
+}
+
+:deep(.el-empty) {
+  margin: 30px 0 !important;
+}
+
+:deep(.el-empty__description) {
+  font-size: 11px !important;
+}
+
+/* 骨架屏样式 */
+:deep(.el-skeleton__bg) {
+  background-color: #f5f5f5 !important;
+}
+
+/* 提示框样式 */
+:deep(.el-tooltip__popper) {
+  max-width: 200px;
+  font-size: 9px;
+}
+
+/* 响应式调整 */
+@media (max-width: 1600px) {
+  .table-wrapper {
+    min-width: 200px;
+  }
+  
+  .truncate-text {
+    max-width: 80px;
+  }
+}
+
 @media (max-width: 1200px) {
-  .stats-wrapper {
-    gap: 12px;
-  }
-}
-
-@media (max-width: 992px) {
-  .header-container {
-    flex-direction: row;
-    flex-wrap: wrap;
-    height: auto;
-    padding: 12px 0;
+  .table-wrapper {
+    min-width: 180px;
   }
   
-  .header-title {
-    width: 100%;
-    margin-bottom: 8px;
+  .boards-header, .boards-item {
+    width: 40px;
   }
   
-  .stats-wrapper {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 12px;
+  .change-header, .change-item {
+    width: 60px;
   }
   
-  .stat-item {
-    margin-bottom: 8px;
-  }
-  
-  .main-content {
-    margin-top: 12px;
+  .truncate-text {
+    max-width: 70px;
   }
 }
 
 @media (max-width: 768px) {
-  .stats-wrapper {
+  .header-container {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 8px;
+    height: auto;
+    padding: 8px 0;
   }
   
-  .stat-item {
-    font-size: 13px;
+  .header-title {
+    padding-right: 0;
+    width: 100%;
   }
   
-  ::v-deep .el-table {
-    font-size: 13px;
+  .header-functions {
+    width: 100%;
+    justify-content: flex-start;
   }
   
-  ::v-deep .el-table__header th {
-    font-size: 13px !important;
-  }
-  
-  .pagination-container {
-    padding: 12px;
-  }
-  
-  ::v-deep .el-pagination {
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 576px) {
-  .page-header {
-    padding: 0 12px;
+  .update-tip {
+    width: calc(100% - 30px);
+    top: 100px;
   }
   
   .main-content {
-    padding: 0 12px;
+    margin-top: 90px !important;
   }
   
-  .stats-wrapper {
-    gap: 6px;
+  .table-wrapper {
+    min-width: 160px;
   }
   
-  .stat-separator {
-    display: none;
+  .truncate-text {
+    max-width: 60px;
   }
   
-  .auto-refresh-status {
-    margin-top: 8px;
+  /* 移动端调整分时图大小 */
+  :deep(.el-popover) {
+    width: 90vw !important;
+  }
+  
+  .stock-chart-iframe {
+    height: 250px !important;
   }
 }
 </style>
