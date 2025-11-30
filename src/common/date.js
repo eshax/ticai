@@ -3,6 +3,34 @@
  */
 
 /**
+ * 获取当前日期
+ * @returns {string} 当前日期字符串，格式为YYYY-MM-DD
+ */
+export const getToday = () => new Date().toISOString().split('T')[0];
+
+/**
+ * 判断指定日期是否为周末
+ * @param {string} dateStr - 日期字符串，格式为YYYY-MM-DD
+ * @returns {boolean} 是否为周末
+ */
+export const isWeekend = (dateStr) => {
+  const day = new Date(dateStr).getDay();
+  return day === 0 || day === 6;
+};
+
+/**
+ * 获取上一个工作日日期
+ * @returns {string} 上一个工作日日期字符串，格式为YYYY-MM-DD
+ */
+export const getLastWorkday = () => {
+  const date = new Date();
+  const day = date.getDay(); // 使用getDay()获取星期几(0-6)
+  const daysToSubtract = day === 0 ? 2 : day === 6 ? 1 : 1;
+  date.setDate(date.getDate() - daysToSubtract);
+  return date.toISOString().split('T')[0];
+};
+
+/**
  * 获取指定日期的前/后工作日
  * @param {string} dateStr - 日期字符串，格式为YYYY-MM-DD
  * @param {number} offset - 偏移天数，正数表示往后，负数表示往前

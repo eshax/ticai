@@ -342,19 +342,10 @@ const formatStockCode = (code) => {
   return numbers ? numbers.join('') : code;
 };
 
-// 日期处理工具
-const getToday = () => new Date().toISOString().split('T')[0];
-const isWeekend = (dateStr) => {
-  const day = new Date(dateStr).getDay();
-  return day === 0 || day === 6;
-};
-const getLastWorkday = () => {
-  const date = new Date();
-  const day = date.getDate();
-  const daysToSubtract = day === 0 ? 2 : day === 6 ? 1 : 1;
-  date.setDate(date.getDate() - daysToSubtract);
-  return date.toISOString().split('T')[0];
-};
+// 日期处理工具 - 现在从 common/date.js 导入
+// getToday
+// isWeekend
+// getLastWorkday
 
 // 日期导航功能 - 获取指定日期的前/后工作日
 // getAdjustedDate 函数现在从 utils/dateUtils.js 导入
@@ -761,7 +752,7 @@ const checkTimeAndUpdateStatus = () => {
 };
 
 import { fetchStockPoolData, isSTStock, pools } from '../api/xgt.js';
-import { getAdjustedDate } from '../common/date.js';
+import { getAdjustedDate, getToday, isWeekend, getLastWorkday } from '../common/date.js';
 
 // 数据请求与过滤
 const fetchStockData = async (isAutoRefresh = false) => {
