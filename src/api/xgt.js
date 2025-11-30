@@ -1,6 +1,17 @@
 import axios from 'axios';
 
 /**
+ * 股票池名称映射关系
+ */
+export const pools = {
+  'limit_up': '涨停',
+  'yesterday_limit_up': '昨日涨停',
+  'limit_up_broken': '炸板',
+  'super_stock': '强势',
+  'limit_down': '跌停'
+};
+
+/**
  * 获取股票池数据
  * @param {string} poolName - 股票池名称
  * @param {string} [date] - 可选的日期参数

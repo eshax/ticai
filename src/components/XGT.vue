@@ -333,14 +333,7 @@ import {
   ElTooltip, ElButtonGroup, ElButton, ElDatePicker
 } from 'element-plus';
 
-// 定义数据源映射关系
-const pools = {
-  'limit_up': '涨停',
-  'yesterday_limit_up': '昨日涨停',
-  'limit_up_broken': '炸板',
-  'super_stock': '强势',
-  'limit_down': '跌停'
-};
+// 数据源映射关系已从 api/xgt.js 导入
 
 // 股票代码格式化函数
 const formatStockCode = (code) => {
@@ -792,7 +785,7 @@ const checkTimeAndUpdateStatus = () => {
   }
 };
 
-import { fetchStockPoolData, isSTStock } from '../api/xgt.js';
+import { fetchStockPoolData, isSTStock, pools } from '../api/xgt.js';
 
 // 数据请求与过滤
 const fetchStockData = async (isAutoRefresh = false) => {
