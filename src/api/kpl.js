@@ -10,6 +10,57 @@ export const pools = {
   'limit_down': '跌停'
 };
 
+// 移除不再使用的mock数据 - API调用失败时将直接抛出错误
+
+/**
+ * 从龙虎榜VIP获取当日数据
+ * @returns {Promise<Array>} 股票数据
+ */
+async function fetchDataFromLongHuVipForToday() {
+  // 使用代理路径，而不是直接URL调用，以避免CORS错误
+  const url = '/api/longhuvip/w1/api/index.php';
+  const params = {
+    a: 'DailyLimitPerformance',
+    c: 'HomeDingPan',
+    st: 1000
+  };
+  
+  try {
+    // 移除headers配置，通过开发服务器转发请求
+    const response = await axios.get(url, { params });
+    return response.data;
+  } catch (error) {
+    console.error('获取当日龙虎榜VIP数据失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 从龙虎榜VIP获取历史数据
+ * @param {string} date - 日期 (YYYY-MM-DD格式)
+ * @returns {Promise<Array>} 股票数据
+ */
+async function fetchDataFromLongHuVipForHistory(date) {
+  // 使用代理路径，而不是直接URL调用，以避免CORS错误
+  const url = '/api/longhuvip-history/w1/api/index.php';
+  const params = {
+    Day: date,
+    PidType: 5,
+    a: 'DailyLimitPerformance',
+    c: 'HisHomeDingPan',
+    st: 1000
+  };
+  
+  try {
+    // 移除headers配置，通过开发服务器转发请求
+    const response = await axios.get(url, { params });
+    return response.data;
+  } catch (error) {
+    console.error(`获取历史日期${date}的龙虎榜VIP数据失败:`, error);
+    throw error;
+  }
+}
+
 /**
  * 获取股票池数据
  * @param {string} poolName - 股票池名称
@@ -17,19 +68,22 @@ export const pools = {
  * @returns {Promise<Array>} 格式化后的股票数据
  */
 export const fetchStockPoolData = async (poolName, date = null) => {
-  let url = `https://flash-api.xuangubao.com.cn/api/pool/detail?pool_name=${poolName}`;
-  if (date) {
-    url += `&date=${date}`;
-  }
-  
   try {
-    const res = await axios.get(url);
-    return res.data.code === 20000 ? (res.data.data || []) : [];
+    // 根据是否有日期参数决定调用哪个接口
+    const data = date ? 
+      await fetchDataFromLongHuVipForHistory(date) : 
+      await fetchDataFromLongHuVipForToday();
+    
+    console.log(`成功从API获取${poolName}股票池数据`);
+    // 确保返回的是可被filter方法处理的数组
+    return data && data.list ? data.list : [];
   } catch (error) {
-    console.error('获取股票池数据失败:', error);
-    return [];
+    console.error(`获取${poolName}股票池数据失败:`, error);
+    // 移除mock数据回退，直接抛出错误，显示真实的API调用状态
+    throw error;
   }
 };
+
 
 /**
  * 检查是否为ST股票
