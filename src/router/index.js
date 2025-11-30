@@ -1,24 +1,24 @@
 // router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
-import StockCard from '../components/StockCard.vue';  // 对应卡片视图组件
-import StockTable from '../components/StockTable.vue'; // 对应表格视图组件
+import KPL from '@/components/KPL.vue';
+import XGT from '../components/XGT.vue';
 
 const routes = [
   { 
-    path: '/stock-card', 
-    name: 'StockCard',
-    component: StockCard,
-    meta: { title: '卡片视图' }
+    path: '/kpl', 
+    name: 'kpl',
+    component: KPL,
+    meta: { title: '开盘啦' }
   },
   { 
-    path: '/stock-table', 
-    name: 'StockTable',
-    component: StockTable,
-    meta: { title: '表格视图' }
+    path: '/xgt', 
+    name: 'xgt',
+    component: XGT,
+    meta: { title: '选股通' }
   },
   { 
     path: '/', 
-    redirect: '/stock-table'  // 默认显示列表视图
+    redirect: '/kpl'  // 默认显示列表视图
   }
 ];
 

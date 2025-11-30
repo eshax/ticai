@@ -3,16 +3,16 @@
     <!-- 组合按钮 - 固定在页面最上层 -->
     <el-dropdown class="combination-button" trigger="click">
       <el-button type="primary" size="small" class="main-button">
-        <i class="fa fa-th-large mr-1"></i>视图切换
+        <i class="fa fa-th-large mr-1"></i>数据源
         <i class="fa fa-caret-down ml-1"></i>
       </el-button>
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item @click="navigateTo('/stock-card')">
-            <i class="fa fa-th-large mr-1"></i>卡片视图
+          <el-dropdown-item @click="navigateTo('/kpl')">
+            <i class="fa fa-th-large mr-1"></i>开盘啦
           </el-dropdown-item>
-          <el-dropdown-item @click="navigateTo('/stock-table')">
-            <i class="fa fa-table mr-1"></i>表格视图
+          <el-dropdown-item @click="navigateTo('/xgt')">
+            <i class="fa fa-table mr-1"></i>选股通
           </el-dropdown-item>
         </el-dropdown-menu>
       </template>
