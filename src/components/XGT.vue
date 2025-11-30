@@ -357,32 +357,7 @@ const getLastWorkday = () => {
 };
 
 // 日期导航功能 - 获取指定日期的前/后工作日
-const getAdjustedDate = (dateStr, offset) => {
-  const date = new Date(dateStr);
-  date.setDate(date.getDate() + offset);
-  
-  // 跳过周末
-  let day = date.getDay();
-  if (day === 0) { // 周日
-    date.setDate(date.getDate() + (offset > 0 ? 1 : -2));
-  } else if (day === 6) { // 周六
-    date.setDate(date.getDate() + (offset > 0 ? 2 : -1));
-  }
-  
-  // 检查是否超出日期范围限制
-  const minDate = new Date('2020-01-01');
-  const maxDate = new Date();
-  
-  if (date < minDate) {
-    return minDate.toISOString().split('T')[0];
-  }
-  
-  if (date > maxDate) {
-    return maxDate.toISOString().split('T')[0];
-  }
-  
-  return date.toISOString().split('T')[0];
-};
+// getAdjustedDate 函数现在从 utils/dateUtils.js 导入
 
 // 检查是否可以导航到指定偏移的日期
 const canNavigateDate = (offset) => {
@@ -786,6 +761,7 @@ const checkTimeAndUpdateStatus = () => {
 };
 
 import { fetchStockPoolData, isSTStock, pools } from '../api/xgt.js';
+import { getAdjustedDate } from '../common/date.js';
 
 // 数据请求与过滤
 const fetchStockData = async (isAutoRefresh = false) => {
