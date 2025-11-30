@@ -7,7 +7,6 @@ export const pools = {
   'limit_up': '涨停',
   'yesterday_limit_up': '昨日涨停',
   'limit_up_broken': '炸板',
-  'super_stock': '强势',
   'limit_down': '跌停'
 };
 
