@@ -3,7 +3,7 @@
     <!-- 组合按钮 - 固定在页面最上层 -->
     <el-dropdown class="combination-button" trigger="click">
       <el-button type="primary" size="small" class="main-button">
-        <i class="fa fa-th-large mr-1"></i>数据源
+        <i class="fa fa-th-large mr-1"></i>{{ currentDataSource }}
         <i class="fa fa-caret-down ml-1"></i>
       </el-button>
       <template #dropdown>
@@ -25,10 +25,38 @@
 
 <script setup>
 import { ElButton, ElDropdown, ElDropdownMenu, ElDropdownItem } from 'element-plus';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
+import { ref, watch } from 'vue';
 
 // 初始化路由
 const router = useRouter();
+const route = useRoute();
+
+// 当前数据源名称
+const currentDataSource = ref('数据源');
+
+// 根据路由路径设置数据源名称
+const setDataSourceName = () => {
+  const path = route.path;
+  if (path === '/kpl') {
+    currentDataSource.value = '数据源：开盘啦';
+  } else if (path === '/xgt') {
+    currentDataSource.value = '数据源：选股通';
+  } else {
+    currentDataSource.value = '数据源';
+  }
+};
+
+// 初始化时设置数据源名称
+setDataSourceName();
+
+// 监听路由变化
+watch(
+  () => route.path,
+  () => {
+    setDataSourceName();
+  }
+);
 
 // 导航方法
 const navigateTo = (path) => {
