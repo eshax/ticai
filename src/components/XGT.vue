@@ -327,7 +327,6 @@
 
 <script setup>
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
-import axios from 'axios';
 import { 
   ElHeader, ElMain, ElTitle, 
   ElSkeleton, ElAlert, ElEmpty,
@@ -483,7 +482,7 @@ const extractBoards = (text) => {
 
 
 // ST股过滤
-const isSTStock = (stockName) => stockName.includes('ST') || stockName.includes('*ST');
+// isSTStock 函数现在从 api/stock.js 导入
 
 // 比较新旧股票数据并获取具体变化内容
 const getStockChanges = (oldStock, newStock) => {
@@ -793,6 +792,8 @@ const checkTimeAndUpdateStatus = () => {
   }
 };
 
+import { fetchStockPoolData, isSTStock } from '../api/xgt.js';
+
 // 数据请求与过滤
 const fetchStockData = async (isAutoRefresh = false) => {
   if (isAutoRefresh && !autoRefresh.value) return;
@@ -804,15 +805,14 @@ const fetchStockData = async (isAutoRefresh = false) => {
     const uniqueOldData = Array.from(new Map(rawData.value.map(item => [item.symbol, item])).values());
     const isDown = selectedPool.value === 'limit_down';
     
-    let url = `https://flash-api.xuangubao.com.cn/api/pool/detail?pool_name=${selectedPool.value}`;
-    if (selectedDate.value !== today) {
-      url += `&date=${selectedDate.value}`;
-    }
+    // 使用API函数获取数据
+    const stockPoolData = await fetchStockPoolData(
+      selectedPool.value, 
+      selectedDate.value !== today ? selectedDate.value : null
+    );
     
-    const res = await axios.get(url);
-    const newData = res.data.code === 20000 
-      ? (res.data.data || []).filter(stock => !isSTStock(stock.stock_chi_name))
-      : [];
+    // 过滤掉ST股票
+    const newData = stockPoolData.filter(stock => !isSTStock(stock.stock_chi_name));
       
     const formattedNewData = newData.map(stock => formatStockData(stock, isDown));
     const changes = findStockChanges(uniqueOldData, formattedNewData);
