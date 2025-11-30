@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { isValidHistoricalDate } from '../common/dateUtils.js';
 
 /**
  * 股票池名称映射关系
@@ -18,7 +19,7 @@ export const pools = {
  */
 async function fetchDataFromLongHuVipForToday() {
   // 使用代理路径，而不是直接URL调用，以避免CORS错误
-  const url = '/api/longhuvip/w1/api/index.php';
+  const url = '/api-today/w1/api/index.php';
   const params = {
     a: 'DailyLimitPerformance',
     c: 'HomeDingPan',
@@ -26,11 +27,20 @@ async function fetchDataFromLongHuVipForToday() {
   };
   
   try {
-    // 移除headers配置，通过开发服务器转发请求
+    console.log('发起API请求:', url, '参数:', params);
+    // 通过开发服务器转发请求
     const response = await axios.get(url, { params });
+    console.log('API响应成功，状态码:', response.status);
+    console.log('响应数据结构:', Object.keys(response.data));
     return response.data;
   } catch (error) {
-    console.error('获取当日龙虎榜VIP数据失败:', error);
+    console.error('获取当日龙虎榜VIP数据失败:', error.message);
+    if (error.response) {
+      console.error('响应状态码:', error.response.status);
+      console.error('响应数据:', error.response.data);
+    } else if (error.request) {
+      console.error('请求已发送但未收到响应:', error.request);
+    }
     throw error;
   }
 }
@@ -41,24 +51,19 @@ async function fetchDataFromLongHuVipForToday() {
  * @returns {Promise<Array>} 股票数据
  */
 async function fetchDataFromLongHuVipForHistory(date) {
-  // 使用代理路径，而不是直接URL调用，以避免CORS错误
-  const url = '/api/longhuvip-history/w1/api/index.php';
+  // 修改API调用路径，使用更简洁的格式
+  const url = '/api-history/w1/api/index.php';
   const params = {
     Day: date,
-    PidType: 5,
+    PidType: 1,
     a: 'DailyLimitPerformance',
     c: 'HisHomeDingPan',
     st: 1000
   };
   
-  try {
-    // 移除headers配置，通过开发服务器转发请求
-    const response = await axios.get(url, { params });
-    return response.data;
-  } catch (error) {
-    console.error(`获取历史日期${date}的龙虎榜VIP数据失败:`, error);
-    throw error;
-  }
+  // 简化的API调用
+  const response = await axios.get(url, { params });
+  return response.data;
 }
 
 /**
@@ -68,18 +73,101 @@ async function fetchDataFromLongHuVipForHistory(date) {
  * @returns {Promise<Array>} 格式化后的股票数据
  */
 export const fetchStockPoolData = async (poolName, date = null) => {
+  console.log(`开始获取${poolName}股票池数据${date ? ` (${date})` : ''}`);
+  
+  // 将validDate定义移到try/catch外部，确保在整个函数作用域内可见
+  let validDate = date;
+  if (date && !isValidHistoricalDate(date)) {
+    console.warn(`请求的日期${date}无效或为未来日期，改用今日日期`);
+    validDate = null; // 使用今日数据
+  }
+  
   try {
-    // 根据是否有日期参数决定调用哪个接口
-    const data = date ? 
-      await fetchDataFromLongHuVipForHistory(date) : 
+    // 根据是否有有效日期参数决定调用哪个接口
+    const data = validDate ? 
+      await fetchDataFromLongHuVipForHistory(validDate) : 
       await fetchDataFromLongHuVipForToday();
     
+      console.log(data);
+
     console.log(`成功从API获取${poolName}股票池数据`);
-    // 确保返回的是可被filter方法处理的数组
-    return data && data.list ? data.list : [];
+    // 增强数据处理逻辑，同时检查多种可能的数据结构
+    // 检查list、List和info字段，确保能获取到所有可能的数据来源
+    console.log('API返回完整数据:', JSON.stringify(data, null, 2));
+    
+    let result = [];
+    
+    
+
+    // 尝试多种可能的数据路径
+    if (data) {
+      // 检查常用的数据字段
+      if (Array.isArray(data.list)) {
+        result = data.list;
+        console.log('使用data.list作为数据源');
+      } else if (Array.isArray(data.List)) {
+        result = data.List;
+        console.log('使用data.List作为数据源');
+      } else if (Array.isArray(data.info)) {
+        // 处理嵌套数组结构，如APIPost中返回的格式: [[[股票数据1], [股票数据2]], '2025-11-27']
+        if (data.info.length > 0 && Array.isArray(data.info[0])) {
+          // 如果info[0]是数组，这很可能是嵌套数据结构
+          if (data.info[0].length > 0 && Array.isArray(data.info[0][0])) {
+            // info[0][0]是数组，说明是三维嵌套结构
+            result = data.info[0];
+            console.log('使用data.info[0]作为数据源（嵌套数组结构）');
+          } else {
+            // info[0]不是更深层的数组，直接使用info
+            result = data.info;
+            console.log('使用data.info作为数据源');
+          }
+        } else {
+          result = data.info;
+          console.log('使用data.info作为数据源');
+        }
+      } else if (Array.isArray(data.Info)) {
+        // 同样处理Info字段的嵌套结构
+        if (data.Info.length > 0 && Array.isArray(data.Info[0])) {
+          if (data.Info[0].length > 0 && Array.isArray(data.Info[0][0])) {
+            result = data.Info[0];
+            console.log('使用data.Info[0]作为数据源（嵌套数组结构）');
+          } else {
+            result = data.Info;
+            console.log('使用data.Info作为数据源');
+          }
+        } else {
+          result = data.Info;
+          console.log('使用data.Info作为数据源');
+        }
+      } else {
+        // 如果所有字段都不是数组，尝试直接使用data
+        console.warn('未找到标准数据数组字段，返回空数组');
+      }
+    }
+    
+    console.log(`最终返回数据数量: ${result.length}`);
+    return result;
   } catch (error) {
-    console.error(`获取${poolName}股票池数据失败:`, error);
-    // 移除mock数据回退，直接抛出错误，显示真实的API调用状态
+    let errorMessage = `获取${poolName}股票池数据失败: ${error.message}`;
+    
+    // 根据不同错误类型提供具体建议
+    if (error.response && error.response.status === 404) {
+      errorMessage += ' - 可能原因：1)日期不存在 2)API路径错误 3)目标服务器无此资源';
+      console.error(errorMessage);
+      console.error('建议检查：', {
+        requestedDate: validDate,
+        apiEndpoint: validDate ? '/api/longhuvip-history/w1/api/index.php' : '/api/longhuvip/w1/api/index.php',
+        proxyConfiguration: '检查vue.config.js中的代理设置'
+      });
+    } else if (error.response && error.response.status === 403) {
+      errorMessage += ' - 可能原因：1)请求被目标服务器拒绝 2)缺少必要的请求头';
+      console.error(errorMessage);
+    } else if (!error.response) {
+      errorMessage += ' - 可能原因：1)网络连接问题 2)代理配置错误 3)目标服务器不可达';
+      console.error(errorMessage);
+    }
+    
+    // 不使用mock数据，直接抛出错误以便调试
     throw error;
   }
 };

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试页面</title>
+    <!-- 尝试使用另一个CDN源 -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        button { padding: 8px 16px; margin: 10px 5px 10px 0; cursor: pointer; }
+        #results { margin-top: 20px; white-space: pre-wrap; background: #f5f5f5; padding: 15px; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API测试页面</h1>
+        <div>
+            <button id="checkAxios">检查Axios</button>
+            <button id="testDirectFetch">测试直接API (Fetch)</button>
+            <button id="testProxyFetch">测试代理API (Fetch)</button>
+            <button id="testNewProxyFetch">测试新代理API (Fetch)</button>
+        </div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+        const date = '2025-11-28';
+        const params = {
+            Day: date,
+            PidType: 1,
+            a: 'DailyLimitPerformance',
+            c: 'HisHomeDingPan',
+            st: 1000
+        };
+
+        // 格式化URL参数
+        function formatParams(params) {
+            return '?' + Object.keys(params)
+                .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+                .join('&');
+        }
+
+        function log(message, type = 'info') {
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            resultsDiv.innerHTML += `<div class="${className}">${message}</div>`;
+        }
+
+        // 检查Axios是否加载
+        document.getElementById('checkAxios').addEventListener('click', () => {
+            resultsDiv.innerHTML = '<h3>检查Axios加载状态...</h3>';
+            if (typeof axios !== 'undefined') {
+                log(`Axios 已成功加载！版本: ${axios.version}`, 'success');
+                log(`全局对象: ${typeof window.axios}`, 'success');
+            } else {
+                log('Axios 未定义，请检查CDN加载！', 'error');
+                log(`window.axios: ${typeof window.axios}`, 'error');
+            }
+        });
+
+        // 使用Fetch API测试直接调用
+        document.getElementById('testDirectFetch').addEventListener('click', async () => {
+            resultsDiv.innerHTML = '<h3>直接API调用测试 (Fetch) 开始...</h3>';
+            try {
+                const url = 'https://apphis.longhuvip.com/w1/api/index.php' + formatParams(params);
+                log(`请求URL: ${url}`, 'info');
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Referer': 'https://apphis.longhuvip.com',
+                        'Origin': 'https://apphis.longhuvip.com',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`响应状态: ${response.status}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`直接API调用成功！`, 'success');
+                    log(`响应数据: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    log(`直接API调用失败，状态码: ${response.status}`, 'error');
+                    const errorData = await response.text();
+                    log(`错误详情: ${errorData}`, 'error');
+                }
+            } catch (error) {
+                log(`直接API调用异常: ${error.message}`, 'error');
+            }
+        });
+
+        // 使用Fetch API测试旧代理路径
+        document.getElementById('testProxyFetch').addEventListener('click', async () => {
+            resultsDiv.innerHTML = '<h3>本地代理API调用测试 (Fetch) 开始...</h3>';
+            try {
+                const url = '/api-history/w1/api/index.php' + formatParams(params);
+                log(`请求URL: ${url}`, 'info');
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`响应状态: ${response.status}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`本地代理API调用成功！`, 'success');
+                    log(`响应数据: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    log(`本地代理API调用失败，状态码: ${response.status}`, 'error');
+                    const errorData = await response.text();
+                    log(`错误详情: ${errorData}`, 'error');
+                }
+            } catch (error) {
+                log(`本地代理API调用异常: ${error.message}`, 'error');
+            }
+        });
+
+        // 使用Fetch API测试新代理路径
+        document.getElementById('testNewProxyFetch').addEventListener('click', async () => {
+            resultsDiv.innerHTML = '<h3>新代理路径API调用测试 (Fetch) 开始...</h3>';
+            try {
+                const url = '/api-history/w1/api/index.php' + formatParams(params);
+                log(`请求URL: ${url}`, 'info');
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Referer': 'http://localhost:8080',
+                        'Origin': 'http://localhost:8080'
+                    }
+                });
+                
+                log(`响应状态: ${response.status}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`新代理路径API调用成功！`, 'success');
+                    log(`响应数据: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    log(`新代理路径API调用失败，状态码: ${response.status}`, 'error');
+                    const errorData = await response.text();
+                    log(`错误详情: ${errorData}`, 'error');
+                }
+            } catch (error) {
+                log(`新代理路径API调用异常: ${error.message}`, 'error');
+            }
+        });
+
+        // 页面加载时检查Axios
+        window.onload = () => {
+            log('页面已加载，点击按钮开始测试...', 'info');
+        };
+    </script>
+</body>
+</html>

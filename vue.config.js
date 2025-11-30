@@ -3,22 +3,22 @@ module.exports = defineConfig({
   transpileDependencies: true,
   devServer: {
     proxy: {
-      // 代理当日数据接口
-      '/api/longhuvip': {
+      // 新的历史数据API代理规则
+      '/api-history': {
+        target: 'https://apphis.longhuvip.com',
+        changeOrigin: true,
+        secure: true,
+        pathRewrite: {
+          '^/api-history': ''
+        }
+      },
+      // 为其他API保留原有的代理规则
+      '/api-today': {
         target: 'https://apphwshhq.longhuvip.com',
         changeOrigin: true,
         secure: false,
         pathRewrite: {
-          '^/api/longhuvip': ''
-        }
-      },
-      // 代理历史数据接口
-      '/api/longhuvip-history': {
-        target: 'https://apphis.longhuvip.com',
-        changeOrigin: true,
-        secure: false,
-        pathRewrite: {
-          '^/api/longhuvip-history': ''
+          '^/api-today': ''
         }
       }
     }
