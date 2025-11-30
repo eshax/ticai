@@ -387,45 +387,7 @@ const isWithinTradingHours = () => {
   return hours >= 9 && hours < 15;
 };
 
-// 涨/跌停时间格式化
-const formatLimitTime = (time = false) => {
-  if (!time || time === '0' || time === 'null' || !time.toString().trim()) {
-    return '-';
-  }
-
-  if (typeof time === 'number' || /^\d+$/.test(time)) {
-    const timestamp = Number(time);
-    const msTimestamp = timestamp.toString().length === 10 ? timestamp * 1000 : timestamp;
-    const date = new Date(msTimestamp);
-    if (isNaN(date.getTime())) return '-';
-    
-    return [
-      String(date.getHours()).padStart(2, '0'),
-      String(date.getMinutes()).padStart(2, '0'),
-      String(date.getSeconds()).padStart(2, '0')
-    ].join(':');
-  }
-
-  if (typeof time === 'string') {
-    if (/^\d{2}:\d{2}:\d{2}$/.test(time)) return time;
-    if (time.includes(' ')) {
-      const timePart = time.split(' ')[1];
-      if (/^\d{2}:\d{2}:\d{2}$/.test(timePart)) return timePart;
-    }
-    if (time.includes('T')) {
-      const date = new Date(time);
-      if (!isNaN(date.getTime())) {
-        return [
-          String(date.getHours()).padStart(2, '0'),
-          String(date.getMinutes()).padStart(2, '0'),
-          String(date.getSeconds()).padStart(2, '0')
-        ].join(':');
-      }
-    }
-
-  return '-';
-  }
-};
+// formatLimitTime 函数已迁移至 api/xgt.js
 
 // 提取板数（用于排序）
 const extractBoards = (text) => {
@@ -751,7 +713,7 @@ const checkTimeAndUpdateStatus = () => {
   }
 };
 
-import { fetchStockPoolData, isSTStock, pools } from '../api/xgt.js';
+import { fetchStockPoolData, pools, isSTStock, formatStockData } from '../api/xgt.js';
 import { getAdjustedDate, getToday, isWeekend, getLastWorkday } from '../common/date.js';
 
 // 数据请求与过滤
@@ -825,77 +787,9 @@ const fetchStockData = async (isAutoRefresh = false) => {
   }
 };
 
-// 股票数据格式化 - 新增保存所有题材的字段
-const formatStockData = (stock, isDown = false) => {
-  const relatedPlates = stock.surge_reason?.related_plates || [];
-  const allThemes = relatedPlates.map(plate => plate.plate_name?.trim() || '未知题材').filter(Boolean);
-  const plateCount = allThemes.length;
-  const hasMultiplePlates = plateCount > 1;
-  
-  // 确保板数数据始终有值
-  const boardIndicator = getLimitDisplayText(stock, isDown) || '-';
-  
-  return {
-    symbol: stock.symbol,
-    stock_chi_name: stock.stock_chi_name,
-    price: stock.price,
-    change_percent: stock.change_percent,
-    limit_up_days: stock.limit_up_days || 0,
-    limit_down_days: stock.limit_down_days || 0,
-    new_stock_break_limit_up: stock.new_stock_break_limit_up || 0,
-    m_days_n_boards_boards: stock.m_days_n_boards_boards || 0,
-    m_days_n_boards_days: stock.m_days_n_boards_days || 0,
-    first_limit_up: formatLimitTime(stock.first_limit_up || stock.first_limit_down, isDown),
-    limitUpBoardsText: getLimitDisplayText(stock, isDown) || '-',
-    boardIndicator: boardIndicator,
-    primaryTheme: allThemes[0] || '无题材',
-    allThemes: allThemes.length > 0 ? allThemes : ['无题材'],
-    surge_reason: stock.surge_reason || {},
-    wasUpdated: false,
-    hasMultiplePlates: hasMultiplePlates,
-    plateCount: plateCount,
-    breakLimitUpTimes: stock.break_limit_up_times || stock.break_limit_down_times || 0,
-    updateTime: new Date().toISOString()
-  };
-};
+// formatStockData 函数已迁移至 api/xgt.js
 
-// 涨跌停板数显示逻辑，优化：当X/Y中X等于Y时直接显示数字
-const getLimitDisplayText = (stock, isDown = false) => {
-  try {
-    if (isDown) {
-      // 跌停池逻辑：显示连跌数
-      const limitDownDays = Number(stock.limit_down_days) || Number(stock.limit_up_days) || 0;
-      return limitDownDays > 0 ? `${limitDownDays}` : '-';
-    }
-    
-    // 涨停相关逻辑 - 按规则比较连板数和X天Y板数据
-    const days = Number(stock.m_days_n_boards_days) || 0; // X值(天数)
-    const boards = Number(stock.m_days_n_boards_boards) || 0; // Y值(板数)
-    const limitUpDays = Number(stock.limit_up_days) || 0; // 连板数
-    
-    // 根据规则：如果连板数量大于Y板，显示连板数量；否则显示X/Y
-    if (limitUpDays > boards) {
-      return `${limitUpDays}`;
-    } else if (days > 0 && boards > 0) {
-      // 优化：当X/Y中X等于Y时直接显示数字
-      if (days === boards) {
-        return `${days}`;
-      }
-      return `${days}/${boards}`;
-    }
-    // 其次显示连板数
-    else if (limitUpDays > 0) {
-      return `${limitUpDays}`;
-    }
-    // 无数据时显示横线
-    else {
-      return '-';
-    }
-  } catch (error) {
-    console.error('Error calculating limit display text:', error);
-    return '-'; // 出错时返回默认值
-  }
-};
+// getLimitDisplayText 函数已迁移至 api/xgt.js
 
 // 自动刷新相关函数
 const startAutoRefresh = () => {
