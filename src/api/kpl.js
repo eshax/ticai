@@ -18,10 +18,10 @@ export const pools = {
  * @returns {Promise<Array>} 股票数据
  */
 async function fetchDataFromLongHuVipForToday() {
-  // 使用代理路径，而不是直接URL调用，以避免CORS错误
+  // 使用正确的代理路径，对应vue.config.js中的配置
   const url = '/api-today/w1/api/index.php';
   const params = {
-    PidType: 1,
+    PidType: 5,
     a: 'DailyLimitPerformance',
     c: 'HomeDingPan',
     st: 1000
@@ -33,7 +33,14 @@ async function fetchDataFromLongHuVipForToday() {
     const response = await axios.get(url, { params });
     console.log('API响应成功，状态码:', response.status);
     console.log('响应数据结构:', Object.keys(response.data));
-    return response.data;
+    
+    // 处理info字段数据 - 确保返回合适的数据结构
+    const data = response.data;
+    if (data && Array.isArray(data.info)) {
+      console.log('返回处理后的info字段数据');
+      return data.info;
+    }
+    return data;
   } catch (error) {
     console.error('获取当日龙虎榜VIP数据失败:', error.message);
     if (error.response) {
@@ -85,23 +92,29 @@ export const fetchStockPoolData = async (poolName, date = null) => {
   
   try {
     // 根据是否有有效日期参数决定调用哪个接口
-    const data = validDate ? 
+    let data = validDate ? 
       await fetchDataFromLongHuVipForHistory(validDate) : 
       await fetchDataFromLongHuVipForToday();
     
-      console.log(data);
+    console.log(data);
 
     console.log(`成功从API获取${poolName}股票池数据`);
-    // 增强数据处理逻辑，同时检查多种可能的数据结构
-    // 检查list、List和info字段，确保能获取到所有可能的数据来源
-    console.log('API返回完整数据:', JSON.stringify(data, null, 2));
+    console.log('API返回数据类型:', Array.isArray(data) ? 'Array' : 'Object');
+    if (!Array.isArray(data)) {
+      console.log('API返回完整数据:', JSON.stringify(data, null, 2));
+    } else {
+      console.log('API直接返回数组，长度:', data.length);
+    }
     
     let result = [];
     
-    
-
-    // 尝试多种可能的数据路径
-    if (data) {
+    // 首先检查data本身是否为数组（可能是fetchDataFromLongHuVipForToday直接返回的info数组）
+    if (Array.isArray(data)) {
+      result = data;
+      console.log('直接使用返回的数组作为数据源');
+    }
+    // 否则按照对象结构处理
+    else if (data) {
       // 检查常用的数据字段
       if (Array.isArray(data.list)) {
         result = data.list;
@@ -141,7 +154,7 @@ export const fetchStockPoolData = async (poolName, date = null) => {
           console.log('使用data.Info作为数据源');
         }
       } else {
-        // 如果所有字段都不是数组，尝试直接使用data
+        // 如果所有字段都不是数组，返回空数组
         console.warn('未找到标准数据数组字段，返回空数组');
       }
     }
@@ -157,7 +170,7 @@ export const fetchStockPoolData = async (poolName, date = null) => {
       console.error(errorMessage);
       console.error('建议检查：', {
         requestedDate: validDate,
-        apiEndpoint: validDate ? '/api/longhuvip-history/w1/api/index.php' : '/api/longhuvip/w1/api/index.php',
+        apiEndpoint: validDate ? '/api-history/w1/api/index.php' : '/api-today/w1/api/index.php',
         proxyConfiguration: '检查vue.config.js中的代理设置'
       });
     } else if (error.response && error.response.status === 403) {
