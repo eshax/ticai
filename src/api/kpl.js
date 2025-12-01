@@ -21,6 +21,7 @@ async function fetchDataFromLongHuVipForToday() {
   // 使用代理路径，而不是直接URL调用，以避免CORS错误
   const url = '/api-today/w1/api/index.php';
   const params = {
+    PidType: 1,
     a: 'DailyLimitPerformance',
     c: 'HomeDingPan',
     st: 1000
