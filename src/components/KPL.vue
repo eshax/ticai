@@ -203,21 +203,7 @@
                           <span class="stock-code">
                             {{ formatStockCode(stock.symbol) }}
                           </span>
-                          <el-tooltip placement="top">
-                            <template #content> 
-                              {{ stock.surge_reason.stock_reason || '无相关信息' }}
-                              <div v-if="stock.allThemes.length > 1" class="tooltip-themes">
-                                其他题材: {{ stock.allThemes.filter(t => t !== stock.displayTheme).join('、') }}
-                              </div>
-                            </template>
-                            <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
-                          </el-tooltip>
-
-                        </div>
-                        <div class="list-item change-item">
-                          <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
-                            {{ (stock.change_percent * 100).toFixed(2) }}%
-                          </span>
+                          <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
                         </div>
                       </div>
                     </div>
@@ -285,24 +271,8 @@
                           <span class="stock-code">
                             {{ formatStockCode(stock.symbol) }}
                           </span>                          
-                          <el-tooltip placement="top">
-                            <template #content> 
-                              {{ stock.surge_reason.stock_reason || '无相关信息' }}
-                              <div v-if="stock.allThemes.length > 1" class="tooltip-themes">
-                                其他题材: {{ stock.allThemes.filter(t => t !== stock.displayTheme).join('、') }}
-                              </div>
-                            </template>
-                            <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
-                          </el-tooltip>
-
-
+                          <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
                           <span v-if="i === 8" class="stock-theme truncate-text">{{ stock.displayTheme }}</span>
-
-                        </div>
-                        <div class="list-item change-item">
-                          <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
-                            {{ (stock.change_percent * 100).toFixed(2) }}%
-                          </span>                          
                         </div>
                       </div>
                     </div>
@@ -330,7 +300,7 @@ import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { 
   ElHeader, ElMain, ElTitle, 
   ElSkeleton, ElAlert, ElEmpty,
-  ElTooltip, ElButtonGroup, ElButton, ElDatePicker
+  ElButtonGroup, ElButton, ElDatePicker
 } from 'element-plus';
 
 // 数据源映射关系已从 api/xgt.js 导入
