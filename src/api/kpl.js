@@ -304,13 +304,50 @@ export const getLimitDisplayText = (stock, isDown = false) => {
  * @returns {Object} 格式化后的股票数据
  */
 export const formatStockData = (stock, isDown = false) => {
-  const relatedPlates = stock.surge_reason?.related_plates || [];
-  const allThemes = relatedPlates.map(plate => plate.plate_name?.trim() || '未知题材').filter(Boolean);
+  // 优先使用后端返回的主题字段
+  let allThemes = [];
+  let primaryTheme = '无题材';
+  
+  // 首先检查后端是否提供了allThemes字段
+  if (stock.allThemes && Array.isArray(stock.allThemes) && stock.allThemes.length > 0) {
+    allThemes = stock.allThemes;
+  }
+  // 然后检查后端是否提供了primaryTheme字段
+  if (stock.primaryTheme && stock.primaryTheme.trim()) {
+    primaryTheme = stock.primaryTheme;
+    // 如果allThemes为空但有primaryTheme，将其添加到allThemes
+    if (allThemes.length === 0) {
+      allThemes = [primaryTheme];
+    }
+  } else if (allThemes.length > 0) {
+    // 如果有allThemes但没有明确的primaryTheme，使用第一个作为主要题材
+    primaryTheme = allThemes[0];
+  } else {
+    // 回退到原有逻辑
+    const relatedPlates = stock.surge_reason?.related_plates || [];
+    allThemes = relatedPlates.map(plate => plate.plate_name?.trim() || '未知题材').filter(Boolean);
+    primaryTheme = allThemes[0] || '无题材';
+  }
+  
   const plateCount = allThemes.length;
   const hasMultiplePlates = plateCount > 1;
   
   // 确保板数数据始终有值
   const boardIndicator = getLimitDisplayText(stock, isDown) || '-';
+  
+  // 从boards字段解析"7天5板"格式的数据
+  let m_days_n_boards_boards = stock.m_days_n_boards_boards || 0;
+  let m_days_n_boards_days = stock.m_days_n_boards_days || 0;
+  
+  if (stock.boards && typeof stock.boards === 'string') {
+    const boardsStr = stock.boards;
+    // 匹配"7天5板"格式的正则表达式
+    const match = boardsStr.match(/(\d+)天(\d+)板/);
+    if (match) {
+      m_days_n_boards_days = parseInt(match[1], 10) || 0;
+      m_days_n_boards_boards = parseInt(match[2], 10) || 0;
+    }
+  }
   
   return {
     symbol: stock.symbol,
@@ -320,12 +357,12 @@ export const formatStockData = (stock, isDown = false) => {
     limit_up_days: stock.limit_up_days || 0,
     limit_down_days: stock.limit_down_days || 0,
     new_stock_break_limit_up: stock.new_stock_break_limit_up || 0,
-    m_days_n_boards_boards: stock.m_days_n_boards_boards || 0,
-    m_days_n_boards_days: stock.m_days_n_boards_days || 0,
+    m_days_n_boards_boards: m_days_n_boards_boards,
+    m_days_n_boards_days: m_days_n_boards_days,
     first_limit_up: formatLimitTime(stock.first_limit_up || stock.first_limit_down, isDown),
     limitUpBoardsText: getLimitDisplayText(stock, isDown) || '-',
     boardIndicator: boardIndicator,
-    primaryTheme: allThemes[0] || '无题材',
+    primaryTheme: primaryTheme,
     allThemes: allThemes.length > 0 ? allThemes : ['无题材'],
     surge_reason: stock.surge_reason || {},
     wasUpdated: false,
