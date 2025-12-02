@@ -1,77 +1,85 @@
 import axios from 'axios';
 import { isValidHistoricalDate } from '../common/dateUtils.js';
 
+// 后端转发服务的基础URL
+const API_BASE_URL = 'http://localhost:8081/api/proxy';
+
 /**
  * 股票池名称映射关系
  */
 export const pools = {
-  'limit_up': '涨停',
-  'yesterday_limit_up': '昨日涨停',
-  'limit_up_broken': '炸板',
-  'limit_down': '跌停'
+  'limit_up': '题材涨停表'
 };
 
 // 移除不再使用的mock数据 - API调用失败时将直接抛出错误
 
 /**
- * 从龙虎榜VIP获取当日数据
+ * 从龙虎榜VIP获取当日数据 - 使用后端转发服务
  * @returns {Promise<Array>} 股票数据
  */
 async function fetchDataFromLongHuVipForToday() {
-  // 使用正确的代理路径，对应vue.config.js中的配置
-  const url = '/api-today/w1/api/index.php';
-  const params = {
-    PidType: 5,
-    a: 'DailyLimitPerformance',
-    c: 'HomeDingPan',
-    st: 1000
-  };
+  // 使用后端转发服务
+  const url = `${API_BASE_URL}/kpl-today`;
+
   
   try {
-    console.log('发起API请求:', url, '参数:', params);
-    // 通过开发服务器转发请求
-    const response = await axios.get(url, { params });
-    console.log('API响应成功，状态码:', response.status);
+    console.log('通过后端转发服务发起今日数据请求:', url);
+    // 调用后端转发服务
+    const response = await axios.get(url, { 
+      // params,
+      timeout: 15000 // 增加超时时间
+    });
+    console.log('后端转发服务响应成功，状态码:', response.status);
     console.log('响应数据结构:', Object.keys(response.data));
     
-    // 处理info字段数据 - 确保返回合适的数据结构
-    const data = response.data;
-    if (data && Array.isArray(data.info)) {
-      console.log('返回处理后的info字段数据');
-      return data.info;
-    }
-    return data;
+    return response.data;
   } catch (error) {
-    console.error('获取当日龙虎榜VIP数据失败:', error.message);
+    console.error('通过后端转发服务获取当日龙虎榜VIP数据失败:', error.message);
     if (error.response) {
-      console.error('响应状态码:', error.response.status);
-      console.error('响应数据:', error.response.data);
+      console.error('后端服务响应状态码:', error.response.status);
+      console.error('后端服务响应数据:', error.response.data);
     } else if (error.request) {
-      console.error('请求已发送但未收到响应:', error.request);
+      console.error('请求已发送但未收到响应，可能是后端服务未启动或网络问题');
+      console.error('请确保后端服务正在运行: node backend-server.js');
     }
     throw error;
   }
 }
 
 /**
- * 从龙虎榜VIP获取历史数据
+ * 从龙虎榜VIP获取历史数据 - 使用后端转发服务
  * @param {string} date - 日期 (YYYY-MM-DD格式)
  * @returns {Promise<Array>} 股票数据
  */
 async function fetchDataFromLongHuVipForHistory(date) {
-  // 修改API调用路径，使用更简洁的格式
-  const url = '/api-history/w1/api/index.php';
+  // 使用后端转发服务
+  const url = `${API_BASE_URL}/kpl-history`;
   const params = {
-    Day: date,
-    PidType: 1,
-    a: 'DailyLimitPerformance',
-    c: 'HisHomeDingPan',
-    st: 1000
+    Day: date
   };
   
-  // 简化的API调用
-  const response = await axios.get(url, { params });
-  return response.data;
+  try {
+    console.log('通过后端转发服务发起历史数据请求，日期:', date);
+    // 调用后端转发服务
+    const response = await axios.get(url, { 
+      params,
+      timeout: 15000 // 增加超时时间
+    });
+    console.log('后端转发服务响应成功，状态码:', response.status);
+    console.log('响应数据结构:', Object.keys(response.data));
+    
+    return response.data;
+  } catch (error) {
+    console.error('通过后端转发服务获取历史龙虎榜VIP数据失败:', error.message);
+    if (error.response) {
+      console.error('后端服务响应状态码:', error.response.status);
+      console.error('后端服务响应数据:', error.response.data);
+    } else if (error.request) {
+      console.error('请求已发送但未收到响应，可能是后端服务未启动或网络问题');
+      console.error('请确保后端服务正在运行: node backend-server.js');
+    }
+    throw error;
+  }
 }
 
 /**
@@ -108,55 +116,57 @@ export const fetchStockPoolData = async (poolName, date = null) => {
     
     let result = [];
     
-    // 首先检查data本身是否为数组（可能是fetchDataFromLongHuVipForToday直接返回的info数组）
-    if (Array.isArray(data)) {
-      result = data;
-      console.log('直接使用返回的数组作为数据源');
+    // 检查后端服务返回的标准格式
+    if (data && Array.isArray(data.info) && data.info.length >= 1) {
+      // 正确处理嵌套数组结构: [股票数据数组, 日期]
+      if (Array.isArray(data.info[0])) {
+        console.log('检测到标准格式：嵌套数组结构 [股票数据数组, 日期]');
+        result = data.info[0];
+        console.log('使用data.info[0]作为数据源，包含', result.length, '条股票记录');
+        console.log('数据日期:', data.info[1] || '未指定');
+        console.log('响应状态码:', data.errcode || '未指定');
+      } else {
+        // 如果info[0]不是数组，可能是特殊情况，直接使用info
+        console.log('info[0]不是数组，使用整个info数组作为数据源');
+        result = data.info;
+      }
     }
-    // 否则按照对象结构处理
+    // 兼容处理可能的不同数据格式
     else if (data) {
-      // 检查常用的数据字段
-      if (Array.isArray(data.list)) {
+      // 检查是否有其他常见的数据字段
+      if (Array.isArray(data.Info)) {
+        // 处理Info字段（首字母大写的情况）
+        if (data.Info.length > 0 && Array.isArray(data.Info[0])) {
+          console.log('使用data.Info[0]作为数据源（嵌套数组结构）');
+          result = data.Info[0];
+        } else {
+          console.log('使用data.Info作为数据源');
+          result = data.Info;
+        }
+      } else if (Array.isArray(data.list)) {
         result = data.list;
         console.log('使用data.list作为数据源');
       } else if (Array.isArray(data.List)) {
         result = data.List;
         console.log('使用data.List作为数据源');
-      } else if (Array.isArray(data.info)) {
-        // 处理嵌套数组结构，如APIPost中返回的格式: [[[股票数据1], [股票数据2]], '2025-11-27']
-        if (data.info.length > 0 && Array.isArray(data.info[0])) {
-          // 如果info[0]是数组，这很可能是嵌套数据结构
-          if (data.info[0].length > 0 && Array.isArray(data.info[0][0])) {
-            // info[0][0]是数组，说明是三维嵌套结构
-            result = data.info[0];
-            console.log('使用data.info[0]作为数据源（嵌套数组结构）');
-          } else {
-            // info[0]不是更深层的数组，直接使用info
-            result = data.info;
-            console.log('使用data.info作为数据源');
-          }
-        } else {
-          result = data.info;
-          console.log('使用data.info作为数据源');
-        }
-      } else if (Array.isArray(data.Info)) {
-        // 同样处理Info字段的嵌套结构
-        if (data.Info.length > 0 && Array.isArray(data.Info[0])) {
-          if (data.Info[0].length > 0 && Array.isArray(data.Info[0][0])) {
-            result = data.Info[0];
-            console.log('使用data.Info[0]作为数据源（嵌套数组结构）');
-          } else {
-            result = data.Info;
-            console.log('使用data.Info作为数据源');
-          }
-        } else {
-          result = data.Info;
-          console.log('使用data.Info作为数据源');
-        }
+      } else if (Array.isArray(data.data)) {
+        result = data.data;
+        console.log('使用data.data作为数据源');
       } else {
-        // 如果所有字段都不是数组，返回空数组
-        console.warn('未找到标准数据数组字段，返回空数组');
+        // 如果所有字段都不是数组，检查data本身是否为数组
+        if (Array.isArray(data)) {
+          result = data;
+          console.log('直接使用返回的数组作为数据源');
+        } else {
+          console.warn('未找到标准数据数组字段，返回空数组');
+        }
       }
+    }
+    
+    // 额外检查：确保result是数组
+    if (!Array.isArray(result)) {
+      console.error('数据处理异常：result不是数组，重置为空数组');
+      result = [];
     }
     
     console.log(`最终返回数据数量: ${result.length}`);
@@ -170,15 +180,19 @@ export const fetchStockPoolData = async (poolName, date = null) => {
       console.error(errorMessage);
       console.error('建议检查：', {
         requestedDate: validDate,
-        apiEndpoint: validDate ? '/api-history/w1/api/index.php' : '/api-today/w1/api/index.php',
-        proxyConfiguration: '检查vue.config.js中的代理设置'
+        apiEndpoint: validDate ? `${API_BASE_URL}/history` : `${API_BASE_URL}/today`,
+        backendService: '确保后端转发服务正在运行'
       });
     } else if (error.response && error.response.status === 403) {
       errorMessage += ' - 可能原因：1)请求被目标服务器拒绝 2)缺少必要的请求头';
       console.error(errorMessage);
     } else if (!error.response) {
-      errorMessage += ' - 可能原因：1)网络连接问题 2)代理配置错误 3)目标服务器不可达';
+      errorMessage += ' - 可能原因：1)后端服务未启动 2)网络连接问题 3)端口被占用';
       console.error(errorMessage);
+      console.error('请确保：');
+      console.error('1. 已运行: node backend-server.js');
+      console.error('2. 端口8081未被占用');
+      console.error('3. 网络连接正常');
     }
     
     // 不使用mock数据，直接抛出错误以便调试
