@@ -1,0 +1,11 @@
+const http = require('http');
+const PORT = 8081;
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ status: 'ok', message: 'Server is running' }));
+});
+
+server.listen(PORT, () => {
+  console.log(`Simple server running on http://localhost:${PORT}`);
+});
