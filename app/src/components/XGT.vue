@@ -155,11 +155,11 @@
         style="margin: 40px 0"
       />
 
-      <!-- 16个表格容器 - 分为上下两排各8个 -->
-      <div v-else-if="!loading && !error" class="sixteen-tables-container">
-        <!-- 上排8个表格 -->
-        <div class="tables-row top-row">
-          <div v-for="i in 8" :key="'top_' + i" class="table-wrapper">
+      <!-- 24个表格容器 - 分为三行各8个 -->
+      <div v-else-if="!loading && !error" class="twentyfour-tables-container">
+        <!-- 第1行8个表格 -->
+        <div class="tables-row row-1">
+          <div v-for="i in 8" :key="'row1_' + i" class="table-wrapper">
             <div class="table-container">
               <!-- 表格内容 -->
               <div class="table-scrollable-content">
@@ -186,7 +186,7 @@
                     >
                       <div 
                         v-for="stock in tablesData[i-1].stocks" 
-                        :key="'top_' + i + '_' + stock.symbol + '_' + tablesData[i-1].theme"
+                        :key="'row1_' + i + '_' + stock.symbol + '_' + tablesData[i-1].theme"
                         class="stock-list-item"
                         :class="{ 
                           'stock-updated': stock.wasUpdated,
@@ -236,9 +236,9 @@
           </div>
         </div>
         
-        <!-- 下排8个表格 -->
-        <div class="tables-row bottom-row">
-          <div v-for="i in 8" :key="'bottom_' + i" class="table-wrapper">
+        <!-- 第2行8个表格 -->
+        <div class="tables-row row-2">
+          <div v-for="i in 8" :key="'row2_' + i" class="table-wrapper">
             <div class="table-container">
               <!-- 表格内容 -->
               <div class="table-scrollable-content">
@@ -254,7 +254,7 @@
                         <span class="group-theme">
                           {{ tablesData[i+7].theme }}
                           <span class="group-count">({{ tablesData[i+7].stocks.length }})</span>
-                          <span v-if="i === 8 && groupedStocks.length > 16" class="overflow-indicator">（包含更多题材）</span>
+                          <!-- <span v-if="i === 8 && groupedStocks.length > 16" class="overflow-indicator">（包含更多题材）</span> -->
                         </span>
                       </div>
                     </div>
@@ -266,7 +266,92 @@
                     >
                       <div 
                         v-for="stock in tablesData[i+7].stocks" 
-                        :key="'bottom_' + i + '_' + stock.symbol + '_' + tablesData[i+7].theme"
+                        :key="'row2_' + i + '_' + stock.symbol + '_' + tablesData[i+7].theme"
+                        class="stock-list-item"
+                        :class="{ 
+                          'stock-updated': stock.wasUpdated,
+                          'multi-plate': stock.hasMultiplePlates,
+                          'limit-down': selectedPool === 'limit_down',
+                          // 'with-theme-column': i === 8
+                        }"
+                      >
+                        <div class="list-item boards-item">
+                          <span class="board-indicator" :class="{ 'down-indicator': selectedPool === 'limit_down' }">
+                            {{ stock.boardIndicator || '-' }}
+                          </span>
+                        </div>
+                        <!-- 只有最后一个表格显示题材列内容 -->
+                        <div class="list-item name-item" :class="{ 'with-theme': i === 8 }">
+                          <span class="stock-code">
+                            {{ formatStockCode(stock.symbol) }}
+                          </span>                          
+                          <el-tooltip placement="top">
+                            <template #content> 
+                              {{ stock.surge_reason.stock_reason || '无相关信息' }}
+                              <div v-if="stock.allThemes.length > 1" class="tooltip-themes">
+                                其他题材: {{ stock.allThemes.filter(t => t !== stock.displayTheme).join('、') }}
+                              </div>
+                            </template>
+                            <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                          </el-tooltip>
+
+
+                          <!-- <span v-if="i === 8" class="stock-theme truncate-text">{{ stock.displayTheme }}</span> -->
+
+                        </div>
+                        <div class="list-item change-item">
+                          <span class="change-percent" :class="{ positive: stock.change_percent > 0, negative: stock.change_percent < 0 }">
+                            {{ (stock.change_percent * 100).toFixed(2) }}%
+                          </span>                          
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 空表格提示 -->
+                  <div v-else-if="i+7 < groupedStocks.length" class="empty-table-placeholder">
+                    加载中...
+                  </div>
+                  <div v-else class="empty-table-placeholder">
+                    无数据
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 第3行8个表格 -->
+        <div class="tables-row row-3">
+          <div v-for="i in 8" :key="'row3_' + i" class="table-wrapper">
+            <div class="table-container">
+              <!-- 表格内容 -->
+              <div class="table-scrollable-content">
+                <div class="groups-container">
+                  <div 
+                    v-if="tablesData[i+15] && tablesData[i+15].theme" 
+                    class="theme-group"
+                  >
+                    <!-- 分组标题 -->
+                    <div class="group-header" @click="toggleGroup(tablesData[i+15].theme)">
+                      <div class="group-header-content">
+                        <i class="fa" :class="isGroupExpanded(tablesData[i+15].theme) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                        <span class="group-theme">
+                          {{ tablesData[i+15].theme }}
+                          <span class="group-count">({{ tablesData[i+15].stocks.length }})</span>
+                          <span v-if="i === 8 && groupedStocks.length > 24" class="overflow-indicator">（包含更多题材）</span>
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <!-- 分组内股票列表 -->
+                    <div 
+                      class="group-stocks" 
+                      v-if="isGroupExpanded(tablesData[i+15].theme)"
+                    >
+                      <div 
+                        v-for="stock in tablesData[i+15].stocks" 
+                        :key="'row3_' + i + '_' + stock.symbol + '_' + tablesData[i+15].theme"
                         class="stock-list-item"
                         :class="{ 
                           'stock-updated': stock.wasUpdated,
@@ -309,7 +394,7 @@
                   </div>
                   
                   <!-- 空表格提示 -->
-                  <div v-else-if="i+7 < groupedStocks.length" class="empty-table-placeholder">
+                  <div v-else-if="i+15 < groupedStocks.length" class="empty-table-placeholder">
                     加载中...
                   </div>
                   <div v-else class="empty-table-placeholder">
@@ -616,31 +701,31 @@ const groupedStocks = computed(() => {
   return Object.values(groups).sort(groupSort);
 });
 
-// 将分组数据分配到16个表格中 - 前15个表格各放1个题材，第16个表格放剩余所有题材
+// 将分组数据分配到24个表格中 - 前23个表格各放1个题材，第24个表格放剩余所有题材
 const tablesData = computed(() => {
-  // 初始化16个表格容器
-  const tables = Array(16).fill().map(() => ({ theme: '', stocks: [] }));
+  // 初始化24个表格容器
+  const tables = Array(24).fill().map(() => ({ theme: '', stocks: [] }));
   
   // 如果没有题材数据，直接返回空表格
   if (groupedStocks.value.length === 0) {
     return tables;
   }
   
-  // 前15个表格各放1个题材
-  const first15Themes = groupedStocks.value.slice(0, 15);
-  first15Themes.forEach((group, index) => {
+  // 前23个表格各放1个题材
+  const first23Themes = groupedStocks.value.slice(0, 23);
+  first23Themes.forEach((group, index) => {
     tables[index] = { ...group };
   });
   
-  // 第16个表格放剩余所有题材（如果有的话）
-  const remainingThemes = groupedStocks.value.slice(15);
+  // 第24个表格放剩余所有题材（如果有的话）
+  const remainingThemes = groupedStocks.value.slice(23);
   if (remainingThemes.length > 0) {
     // 合并所有剩余题材的股票
     const allStocks = remainingThemes.flatMap(group => group.stocks);
     // 对合并后的股票重新排序
     allStocks.sort(stockSortWithinGroup);
     
-    tables[15] = {
+    tables[23] = {
       theme: `其他题材`,
       stocks: allStocks
     };
@@ -1304,6 +1389,20 @@ html, body {
   background-color: #f5f5f5;
 }
 
+/* 24表格容器样式 - 3行8列布局 */
+.twentyfour-tables-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 10px;
+}
+
+/* 每一行表格占33.33%的高度 */
+.twentyfour-tables-container .tables-row {
+  height: 33.33%;
+  min-height: 180px;
+}
+
 /* 单个表格容器 */
 .table-wrapper {
   flex: 1;
@@ -1313,8 +1412,9 @@ html, body {
   flex-direction: column;
 }
 
-/* 最后一个表格宽度调整以容纳题材列 */
-.tables-row.bottom-row .table-wrapper:nth-child(8) {
+/* 第2、3行的最后一个表格宽度调整以容纳题材列 */
+.tables-row.row-2 .table-wrapper:nth-child(8),
+.tables-row.row-3 .table-wrapper:nth-child(8) {
   min-width: 220px;
 }
 
@@ -1628,17 +1728,22 @@ html, body {
 /* 响应式调整 */
 @media (max-width: 1600px) {
   .table-wrapper {
-    min-width: 200px;
+    min-width: 180px;
   }
   
   .truncate-text {
-    max-width: 80px;
+    max-width: 70px;
+  }
+  
+  /* 在较窄屏幕上调整行高 */
+  .twentyfour-tables-container .tables-row {
+    min-height: 160px;
   }
 }
 
 @media (max-width: 1200px) {
   .table-wrapper {
-    min-width: 180px;
+    min-width: 160px;
   }
   
   .boards-header, .boards-item {
@@ -1650,7 +1755,12 @@ html, body {
   }
   
   .truncate-text {
-    max-width: 70px;
+    max-width: 60px;
+  }
+  
+  /* 在更窄屏幕上进一步调整行高 */
+  .twentyfour-tables-container .tables-row {
+    min-height: 140px;
   }
 }
 
@@ -1682,12 +1792,37 @@ html, body {
     margin-top: 90px !important;
   }
   
+  /* 24表格移动端布局优化 */
+  .twentyfour-tables-container {
+    height: auto;
+    gap: 8px;
+  }
+  
+  .twentyfour-tables-container .tables-row {
+    height: auto;
+    min-height: 120px;
+  }
+  
   .table-wrapper {
-    min-width: 160px;
+    min-width: 140px;
+    height: auto;
   }
   
   .truncate-text {
-    max-width: 60px;
+    max-width: 50px;
+  }
+  
+  /* 优化移动端表格内容显示 */
+  .stock-name {
+    font-size: 11px;
+  }
+  
+  .stock-code {
+    font-size: 8px;
+  }
+  
+  .change-percent {
+    font-size: 9px;
   }
   
   /* 移动端调整分时图大小 */
