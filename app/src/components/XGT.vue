@@ -203,7 +203,7 @@
                           <span class="stock-code">
                             {{ formatStockCode(stock.symbol) }}
                           </span>
-                          <el-tooltip placement="top">
+                          <el-tooltip placement="top" trigger="click">
                             <template #content> 
                               {{ stock.surge_reason.stock_reason || '无相关信息' }}
                               <div v-if="stock.allThemes.length > 1" class="tooltip-themes">
@@ -285,7 +285,7 @@
                           <span class="stock-code">
                             {{ formatStockCode(stock.symbol) }}
                           </span>                          
-                          <el-tooltip placement="top">
+                          <el-tooltip placement="top" trigger="click">
                             <template #content> 
                               {{ stock.surge_reason.stock_reason || '无相关信息' }}
                               <div v-if="stock.allThemes.length > 1" class="tooltip-themes">
@@ -370,7 +370,7 @@
                           <span class="stock-code">
                             {{ formatStockCode(stock.symbol) }}
                           </span>                          
-                          <el-tooltip placement="top">
+                          <el-tooltip placement="top" trigger="click">
                             <template #content> 
                               {{ stock.surge_reason.stock_reason || '无相关信息' }}
                               <div v-if="stock.allThemes.length > 1" class="tooltip-themes">
