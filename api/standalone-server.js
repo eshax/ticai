@@ -86,6 +86,7 @@ function formatStockData(stockData) {
         primaryTheme: stock[5] || '',
         allThemes: [],
         boards: stock[18] || '',
+        oneline: stock[17] == 0 ? 1 : 0,
         m_days_n_boards_days: m_days_n_boards_days,
         m_days_n_boards_boards: m_days_n_boards_boards
       };
