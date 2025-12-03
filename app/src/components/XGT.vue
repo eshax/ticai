@@ -210,7 +210,7 @@
                                 其他题材: {{ stock.allThemes.filter(t => t !== stock.displayTheme).join('、') }}
                               </div>
                             </template>
-                            <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                            <span class="stock-name truncate-text" style="cursor: pointer;">{{ stock.stock_chi_name }}</span>
                           </el-tooltip>
 
                         </div>
@@ -292,7 +292,7 @@
                                 其他题材: {{ stock.allThemes.filter(t => t !== stock.displayTheme).join('、') }}
                               </div>
                             </template>
-                            <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                            <span class="stock-name truncate-text" style="cursor: pointer;">{{ stock.stock_chi_name }}</span>
                           </el-tooltip>
 
 
@@ -377,7 +377,7 @@
                                 其他题材: {{ stock.allThemes.filter(t => t !== stock.displayTheme).join('、') }}
                               </div>
                             </template>
-                            <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                            <span class="stock-name truncate-text" style="cursor: pointer;">{{ stock.stock_chi_name }}</span>
                           </el-tooltip>
 
 
