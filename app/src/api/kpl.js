@@ -2,7 +2,7 @@ import axios from 'axios';
 import { isValidHistoricalDate } from '../common/dateUtils.js';
 
 // 后端转发服务的基础URL
-const API_BASE_URL = 'http://localhost:8081/api/proxy';
+const API_BASE_URL = '/api/proxy';
 
 /**
  * 股票池名称映射关系
