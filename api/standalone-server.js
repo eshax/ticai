@@ -77,6 +77,8 @@ function formatStockData(stockData) {
       }
     }
 
+    let allThemes = Array.isArray(stock[12]) ? stock[12] : typeof stock[12] === 'string' ? stock[12].split('、') : [];
+
     try {
       return {
         symbol: stock[0] || '',
@@ -84,6 +86,7 @@ function formatStockData(stockData) {
         change_percent: 0,
         limit_up_days: stock[15] || 0,
         primaryTheme: stock[5] || '',
+        otherTheme: allThemes.filter(theme => theme !== stock[5]).join('、'),
         allThemes: [],
         boards: stock[18] || '',
         oneline: stock[17] == 0 ? 1 : 0,
