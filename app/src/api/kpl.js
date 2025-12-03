@@ -353,6 +353,7 @@ export const formatStockData = (stock, isDown = false) => {
     symbol: stock.symbol,
     stock_chi_name: stock.stock_chi_name,
     price: stock.price,
+    oneline: stock.oneline,
     change_percent: stock.change_percent,
     limit_up_days: stock.limit_up_days || 0,
     limit_down_days: stock.limit_down_days || 0,

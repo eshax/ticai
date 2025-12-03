@@ -191,7 +191,8 @@
                         :class="{ 
                           'stock-updated': stock.wasUpdated,
                           'multi-plate': stock.hasMultiplePlates,
-                          'limit-down': selectedPool === 'limit_down'
+                          'limit-down': selectedPool === 'limit_down',
+                          'one-line': stock.oneline === 1 || stock.oneline === '1' || stock.oneline
                         }"
                       >
                         <div class="list-item boards-item">
@@ -256,7 +257,8 @@
                         :class="{ 
                           'stock-updated': stock.wasUpdated,
                           'multi-plate': stock.hasMultiplePlates,
-                          'limit-down': selectedPool === 'limit_down'
+                          'limit-down': selectedPool === 'limit_down',
+                          'one-line': stock.oneline === 1 || stock.oneline === '1' || stock.oneline
                         }"
                       >
                         <div class="list-item boards-item">
@@ -321,7 +323,8 @@
                         :class="{ 
                           'stock-updated': stock.wasUpdated,
                           'multi-plate': stock.hasMultiplePlates,
-                          'limit-down': selectedPool === 'limit_down'
+                          'limit-down': selectedPool === 'limit_down',
+                          'one-line': stock.oneline === 1 || stock.oneline === '1' || stock.oneline
                         }"
                       >
                         <div class="list-item boards-item">
@@ -388,7 +391,8 @@
                           'stock-updated': stock.wasUpdated,
                           'multi-plate': stock.hasMultiplePlates,
                           'limit-down': selectedPool === 'limit_down',
-                          'with-theme-column': i === 8
+                          'with-theme-column': i === 8,
+                          'one-line': stock.oneline === 1 || stock.oneline === '1' || stock.oneline
                         }"
                       >
                         <div class="list-item boards-item">
@@ -1568,6 +1572,12 @@ html, body {
   padding: 0;
   transition: background-color 0.2s;
   height: 32px;
+}
+
+/* oneline为1时的粉红色背景 - 提高优先级 */
+.group-stocks > .stock-list-item.one-line {
+  background-color: #fff1f0 !important;
+  background-image: none !important;
 }
 
 /* 带题材列的列表项 */
