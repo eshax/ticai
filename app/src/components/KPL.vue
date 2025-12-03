@@ -205,6 +205,7 @@
                             {{ formatStockCode(stock.symbol) }}
                           </span>
                           <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                          <span class="stock-theme truncate-text">{{ stock.otherTheme }}</span>
                         </div>
                       </div>
                     </div>
@@ -271,6 +272,7 @@
                             {{ formatStockCode(stock.symbol) }}
                           </span>
                           <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                          <span class="stock-theme truncate-text">{{ stock.otherTheme }}</span>
                         </div>
                       </div>
                     </div>
@@ -337,6 +339,7 @@
                             {{ formatStockCode(stock.symbol) }}
                           </span>
                           <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                          <span class="stock-theme truncate-text">{{ stock.otherTheme }}</span>
                         </div>
                       </div>
                     </div>
@@ -406,6 +409,7 @@
                             {{ formatStockCode(stock.symbol) }}
                           </span>                         
                           <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                          <span v-if="i !== 8" class="stock-theme truncate-text">{{ stock.otherTheme }}</span>
                           <span v-if="i === 8" class="stock-theme truncate-text">{{ stock.displayTheme }}</span>
                         </div>
                       </div>
@@ -1614,7 +1618,7 @@ html, body {
 
 /* 列表项内容 */
 .list-item {
-  padding: 0 6px;
+  padding: 0 3px;
   display: flex;
   align-items: center;
   height: 100%;
@@ -1626,7 +1630,7 @@ html, body {
 }
 
 .boards-item {
-  width: 40px;
+  width: 35px;
   justify-content: center;
 }
 
@@ -1684,7 +1688,7 @@ html, body {
 .stock-code {
   font-size: 9px;
   color: #666;
-  margin-left: 3px;
+  /* margin-left: 3px; */
 }
 
 /* 涨跌幅样式 */
@@ -1779,7 +1783,7 @@ html, body {
   }
   
   .boards-header, .boards-item {
-    width: 40px;
+    width: 35px;
   }
   
   .change-header, .change-item {
