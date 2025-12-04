@@ -3,6 +3,28 @@ const https = require('https');
 const url = require('url');
 const PORT = 8081;
 
+// 缓存配置
+const CACHE_DURATION = 3000; // 缓存时间3秒
+
+// 缓存对象结构：
+// {
+//   'kpl-today': { data: {}, timestamp: 1234567890 },
+//   'kpl-history': {
+//     '2023-05-20': { data: {}, timestamp: 1234567890 },
+//     '2023-05-21': { data: {}, timestamp: 1234567890 }
+//   }
+// }
+const cache = {
+  'kpl-today': { data: null, timestamp: 0 },
+  'kpl-history': {} // 历史数据按Day参数缓存
+};
+
+// 检查缓存是否有效
+function isCacheValid(cacheItem) {
+  if (!cacheItem || !cacheItem.data) return false;
+  return Date.now() - cacheItem.timestamp < CACHE_DURATION;
+}
+
 // 简易的解析JSON请求体函数
 function parseJSONBody(req) {
   return new Promise((resolve, reject) => {
@@ -136,6 +158,14 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      // 检查缓存
+      if (cache['kpl-history'][Day] && isCacheValid(cache['kpl-history'][Day])) {
+        console.log(`[缓存命中] 返回 ${Day} 的历史数据`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(cache['kpl-history'][Day].data));
+        return;
+      }
+
       const targetUrl = 'https://apphis.longhuvip.com/w1/api/index.php';
       const requests = [];
 
@@ -160,15 +190,31 @@ const server = http.createServer(async (req, res) => {
       const allData = results.flat();
       const formattedData = formatStockData(allData);
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
+      const responseData = {
         data: formattedData,
         date: Day,
         code: '200'
-      }));
+      };
+
+      // 更新缓存
+      cache['kpl-history'][Day] = {
+        data: responseData,
+        timestamp: Date.now()
+      };
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(responseData));
 
     // 今日数据API
     } else if (pathname === '/api/proxy/kpl-today') {
+      // 检查缓存
+      if (isCacheValid(cache['kpl-today'])) {
+        console.log('[缓存命中] 返回今日数据');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(cache['kpl-today'].data));
+        return;
+      }
+
       const { a = 'DailyLimitPerformance', c = 'HomeDingPan', st = 1000 } = query;
       const targetUrl = 'https://apphwshhq.longhuvip.com/w1/api/index.php';
       const requests = [];
@@ -193,12 +239,20 @@ const server = http.createServer(async (req, res) => {
       const allData = results.flat();
       const formattedData = formatStockData(allData);
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
+      const responseData = {
         data: formattedData,
         date: new Date().toISOString().split('T')[0],
         code: '200'
-      }));
+      };
+
+      // 更新缓存
+      cache['kpl-today'] = {
+        data: responseData,
+        timestamp: Date.now()
+      };
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(responseData));
 
     // 健康检查端点
     } else if (pathname === '/health') {
