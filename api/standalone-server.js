@@ -4,7 +4,8 @@ const url = require('url');
 const PORT = 8081;
 
 // 缓存配置
-const CACHE_DURATION = 3000; // 缓存时间3秒
+const CACHE_DURATION_TODAY = 3000; // 今日数据缓存时间3秒
+const CACHE_DURATION_HISTORY = 300000; // 历史数据缓存时间5分钟(300000毫秒)
 
 // 缓存对象结构：
 // {
@@ -20,9 +21,10 @@ const cache = {
 };
 
 // 检查缓存是否有效
-function isCacheValid(cacheItem) {
+function isCacheValid(cacheItem, isHistory = false) {
   if (!cacheItem || !cacheItem.data) return false;
-  return Date.now() - cacheItem.timestamp < CACHE_DURATION;
+  const duration = isHistory ? CACHE_DURATION_HISTORY : CACHE_DURATION_TODAY;
+  return Date.now() - cacheItem.timestamp < duration;
 }
 
 // 简易的解析JSON请求体函数
@@ -159,7 +161,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       // 检查缓存
-      if (cache['kpl-history'][Day] && isCacheValid(cache['kpl-history'][Day])) {
+      if (cache['kpl-history'][Day] && isCacheValid(cache['kpl-history'][Day], true)) {
         console.log(`[缓存命中] 返回 ${Day} 的历史数据`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(cache['kpl-history'][Day].data));
