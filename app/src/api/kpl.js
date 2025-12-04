@@ -23,14 +23,14 @@ async function fetchDataFromLongHuVipForToday() {
 
   
   try {
-    console.log('通过后端转发服务发起今日数据请求:', url);
+    // console.log('通过后端转发服务发起今日数据请求:', url);
     // 调用后端转发服务
     const response = await axios.get(url, { 
       // params,
       timeout: 15000 // 增加超时时间
     });
-    console.log('后端转发服务响应成功，状态码:', response.status);
-    console.log('响应数据结构:', Object.keys(response.data));
+    // console.log('后端转发服务响应成功，状态码:', response.status);
+    // console.log('响应数据结构:', Object.keys(response.data));
     
     return response.data;
   } catch (error) {
@@ -59,14 +59,14 @@ async function fetchDataFromLongHuVipForHistory(date) {
   };
   
   try {
-    console.log('通过后端转发服务发起历史数据请求，日期:', date);
+    // console.log('通过后端转发服务发起历史数据请求，日期:', date);
     // 调用后端转发服务
     const response = await axios.get(url, { 
       params,
       timeout: 15000 // 增加超时时间
     });
-    console.log('后端转发服务响应成功，状态码:', response.status);
-    console.log('响应数据结构:', Object.keys(response.data));
+    // console.log('后端转发服务响应成功，状态码:', response.status);
+    // console.log('响应数据结构:', Object.keys(response.data));
     
     return response.data;
   } catch (error) {
@@ -89,7 +89,7 @@ async function fetchDataFromLongHuVipForHistory(date) {
  * @returns {Promise<Array>} 格式化后的股票数据
  */
 export const fetchStockPoolData = async (poolName, date = null) => {
-  console.log(`开始获取${poolName}股票池数据${date ? ` (${date})` : ''}`);
+  // console.log(`开始获取${poolName}股票池数据${date ? ` (${date})` : ''}`);
   
   // 将validDate定义移到try/catch外部，确保在整个函数作用域内可见
   let validDate = date;
@@ -104,15 +104,15 @@ export const fetchStockPoolData = async (poolName, date = null) => {
       await fetchDataFromLongHuVipForHistory(validDate) : 
       await fetchDataFromLongHuVipForToday();
     
-    console.log(data);
+    // console.log(data);
 
-    console.log(`成功从API获取${poolName}股票池数据`);
-    console.log('API返回数据类型:', Array.isArray(data) ? 'Array' : 'Object');
-    if (!Array.isArray(data)) {
-      console.log('API返回完整数据:', JSON.stringify(data, null, 2));
-    } else {
-      console.log('API直接返回数组，长度:', data.length);
-    }
+    // console.log(`成功从API获取${poolName}股票池数据`);
+    // console.log('API返回数据类型:', Array.isArray(data) ? 'Array' : 'Object');
+    // if (!Array.isArray(data)) {
+    //   console.log('API返回完整数据:', JSON.stringify(data, null, 2));
+    // } else {
+    //   console.log('API直接返回数组，长度:', data.length);
+    // }
     
     let result = [];
     
@@ -120,14 +120,14 @@ export const fetchStockPoolData = async (poolName, date = null) => {
     if (data && Array.isArray(data.info) && data.info.length >= 1) {
       // 正确处理嵌套数组结构: [股票数据数组, 日期]
       if (Array.isArray(data.info[0])) {
-        console.log('检测到标准格式：嵌套数组结构 [股票数据数组, 日期]');
+        // console.log('检测到标准格式：嵌套数组结构 [股票数据数组, 日期]');
         result = data.info[0];
-        console.log('使用data.info[0]作为数据源，包含', result.length, '条股票记录');
-        console.log('数据日期:', data.info[1] || '未指定');
-        console.log('响应状态码:', data.errcode || '未指定');
+        // console.log('使用data.info[0]作为数据源，包含', result.length, '条股票记录');
+        // console.log('数据日期:', data.info[1] || '未指定');
+        // console.log('响应状态码:', data.errcode || '未指定');
       } else {
         // 如果info[0]不是数组，可能是特殊情况，直接使用info
-        console.log('info[0]不是数组，使用整个info数组作为数据源');
+        // console.log('info[0]不是数组，使用整个info数组作为数据源');
         result = data.info;
       }
     }
@@ -137,26 +137,26 @@ export const fetchStockPoolData = async (poolName, date = null) => {
       if (Array.isArray(data.Info)) {
         // 处理Info字段（首字母大写的情况）
         if (data.Info.length > 0 && Array.isArray(data.Info[0])) {
-          console.log('使用data.Info[0]作为数据源（嵌套数组结构）');
+          // console.log('使用data.Info[0]作为数据源（嵌套数组结构）');
           result = data.Info[0];
         } else {
-          console.log('使用data.Info作为数据源');
+          // console.log('使用data.Info作为数据源');
           result = data.Info;
         }
       } else if (Array.isArray(data.list)) {
         result = data.list;
-        console.log('使用data.list作为数据源');
+        // console.log('使用data.list作为数据源');
       } else if (Array.isArray(data.List)) {
         result = data.List;
-        console.log('使用data.List作为数据源');
+        // console.log('使用data.List作为数据源');
       } else if (Array.isArray(data.data)) {
         result = data.data;
-        console.log('使用data.data作为数据源');
+        // console.log('使用data.data作为数据源');
       } else {
         // 如果所有字段都不是数组，检查data本身是否为数组
         if (Array.isArray(data)) {
           result = data;
-          console.log('直接使用返回的数组作为数据源');
+          // console.log('直接使用返回的数组作为数据源');
         } else {
           console.warn('未找到标准数据数组字段，返回空数组');
         }
@@ -169,7 +169,7 @@ export const fetchStockPoolData = async (poolName, date = null) => {
       result = [];
     }
     
-    console.log(`最终返回数据数量: ${result.length}`);
+    // console.log(`最终返回数据数量: ${result.length}`);
     return result;
   } catch (error) {
     let errorMessage = `获取${poolName}股票池数据失败: ${error.message}`;
