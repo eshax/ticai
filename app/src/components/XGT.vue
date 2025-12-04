@@ -476,12 +476,21 @@ const isWithinTradingHours = () => {
 
 // 提取板数（用于排序）
 const extractBoards = (text) => {
+  if (!text || text === '-') return 0;
+  
+  // 处理类似"7天6板"的格式
+  if (text.includes('天')) {
+    const match = text.match(/(\d+)板/);
+    return match ? Number(match[1]) : 0;
+  }
+  
+  // 处理包含'/'的格式
   if (text.includes('/')) {
     const parts = text.split('/');
     return parts.length > 1 ? Number(parts[1]) || 0 : 0;
   }
-  if (text === '-') return 0;
   
+  // 处理普通数字格式
   const match = text.match(/(\d+)/);
   return match ? Number(match[1]) : 0;
 };
@@ -743,14 +752,23 @@ const isGroupExpanded = (theme) => {
   return groupExpandedState.value[theme];
 };
 
-// 分组排序函数（按股票数量降序）
+// 分组排序函数（按最高板数值降序，板数相同时按股票数量降序）
 const groupSort = (a, b) => {
-  // 先按股票数量排序
+  // 计算每个题材的最高板数值
+  const maxBoardsA = Math.max(...a.stocks.map(stock => extractBoards(stock.limitUpBoardsText || '0')));
+  const maxBoardsB = Math.max(...b.stocks.map(stock => extractBoards(stock.limitUpBoardsText || '0')));
+  
+  // 先按最高板数值降序排序
+  if (maxBoardsA !== maxBoardsB) {
+    return maxBoardsB - maxBoardsA;
+  }
+  
+  // 板数相同则按股票数量降序排序
   if (a.stocks.length !== b.stocks.length) {
     return b.stocks.length - a.stocks.length;
   }
   
-  // 数量相同则按题材名称排序
+  // 股票数量也相同则按题材名称排序
   return a.theme.localeCompare(b.theme);
 };
 
