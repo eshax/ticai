@@ -77,7 +77,7 @@
             <div class="section-title added-title">新增 {{ updatedStocks.added.length }} 只股票:</div>
             <ul class="stock-list">
               <li v-for="stock in updatedStocks.added" :key="'added_' + stock.symbol + '_' + stock.plateName" class="stock-item">
-                {{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})
+                <span :class="{ 'red-stock': isRedCode(stock.symbol) }">{{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})</span>
                 <span v-if="stock.plateName && stock.plateName !== '未知板块'"> - {{ stock.plateName }}</span>
               </li>
             </ul>
@@ -86,7 +86,7 @@
             <div class="section-title removed-title">移除 {{ updatedStocks.removed.length }} 只股票:</div>
             <ul class="stock-list">
               <li v-for="stock in updatedStocks.removed" :key="'removed_' + stock.symbol + '_' + stock.plateName" class="stock-item">
-                {{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})
+                <span :class="{ 'red-stock': isRedCode(stock.symbol) }">{{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})</span>
                 <span v-if="stock.plateName && stock.plateName !== '未知板块'"> - {{ stock.plateName }}</span>
               </li>
             </ul>
@@ -95,7 +95,7 @@
             <div class="section-title changed-title">变动 {{ updatedStocks.changed.length }} 只股票:</div>
             <ul class="stock-list">
               <li v-for="stock in updatedStocks.changed" :key="'changed_' + stock.symbol + '_' + stock.plateName" class="stock-item">
-                <div class="stock-name">
+                <div class="stock-name" :class="{ 'red-stock': isRedCode(stock.symbol) }">
                   {{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})
                   <span v-if="stock.plateName && stock.plateName !== '未知板块'"> - {{ stock.plateName }}</span>
                 </div>
@@ -282,6 +282,15 @@ const formatStockCode = (code) => {
   if (!code) return '';
   const numbers = code.match(/\d+/g);
   return numbers ? numbers.join('') : code;
+};
+
+// 检查股票代码是否以30或68开头
+const isRedCode = (code) => {
+  if (!code) return false;
+  const numbers = code.match(/\d+/g);
+  if (!numbers) return false;
+  const stockCode = numbers.join('');
+  return stockCode.startsWith('30') || stockCode.startsWith('68');
 };
 
 // 开板次数格式化 - 0次显示为 "-"
@@ -915,6 +924,11 @@ watch(selectedDate, (newVal) => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* 红色股票代码和名称样式 */
+.red-stock {
+  color: #ff0000 !important;
 }
 
 body {

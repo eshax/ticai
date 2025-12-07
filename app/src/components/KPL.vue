@@ -92,7 +92,7 @@
             <div class="section-title added-title">涨停 {{ updatedStocks.added.length }} 只股票:</div>
             <ul class="stock-list">
               <li v-for="stock in updatedStocks.added" :key="'added_' + stock.symbol" class="stock-item">
-                {{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})
+                <span :class="{ 'red-stock': isRedCode(stock.symbol) }">{{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})</span>
               </li>
             </ul>
           </div>
@@ -100,7 +100,7 @@
             <div class="section-title removed-title">炸板 {{ updatedStocks.removed.length }} 只股票:</div>
             <ul class="stock-list">
               <li v-for="stock in updatedStocks.removed" :key="'removed_' + stock.symbol" class="stock-item">
-                {{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})
+                <span :class="{ 'red-stock': isRedCode(stock.symbol) }">{{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})</span>
               </li>
             </ul>
           </div>
@@ -108,7 +108,7 @@
             <div class="section-title changed-title">变动 {{ updatedStocks.changed.length }} 只股票:</div>
             <ul class="stock-list">
               <li v-for="stock in updatedStocks.changed" :key="'changed_' + stock.symbol" class="stock-item">
-                <div class="stock-name">
+                <div class="stock-name" :class="{ 'red-stock': isRedCode(stock.symbol) }">
                   {{ stock.stock_chi_name }}({{ formatStockCode(stock.symbol) }})
                 </div>
                 <ul class="change-details">
@@ -201,10 +201,10 @@
                           </span>
                         </div>
                         <div class="list-item name-item">
-                          <span class="stock-code">
+                          <span class="stock-code" :class="{ 'red-stock': isRedCode(stock.symbol) }">
                             {{ formatStockCode(stock.symbol) }}
                           </span>
-                          <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                          <span class="stock-name truncate-text" :class="{ 'red-stock': isRedCode(stock.symbol) }">{{ stock.stock_chi_name }}</span>
                           <span class="stock-theme truncate-text">{{ stock.otherTheme }}</span>
                         </div>
                       </div>
@@ -268,10 +268,10 @@
                           </span>
                         </div>
                         <div class="list-item name-item">
-                          <span class="stock-code">
+                          <span class="stock-code" :class="{ 'red-stock': isRedCode(stock.symbol) }">
                             {{ formatStockCode(stock.symbol) }}
                           </span>
-                          <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                          <span class="stock-name truncate-text" :class="{ 'red-stock': isRedCode(stock.symbol) }">{{ stock.stock_chi_name }}</span>
                           <span class="stock-theme truncate-text">{{ stock.otherTheme }}</span>
                         </div>
                       </div>
@@ -335,10 +335,10 @@
                           </span>
                         </div>
                         <div class="list-item name-item">
-                          <span class="stock-code">
+                          <span class="stock-code" :class="{ 'red-stock': isRedCode(stock.symbol) }">
                             {{ formatStockCode(stock.symbol) }}
                           </span>
-                          <span class="stock-name truncate-text">{{ stock.stock_chi_name }}</span>
+                          <span class="stock-name truncate-text" :class="{ 'red-stock': isRedCode(stock.symbol) }">{{ stock.stock_chi_name }}</span>
                           <span class="stock-theme truncate-text">{{ stock.otherTheme }}</span>
                         </div>
                       </div>
@@ -379,6 +379,15 @@ const formatStockCode = (code) => {
   if (!code) return '';
   const numbers = code.match(/\d+/g);
   return numbers ? numbers.join('') : code;
+};
+
+// 检查股票代码是否以30或68开头
+const isRedCode = (code) => {
+  if (!code) return false;
+  const numbers = code.match(/\d+/g);
+  if (!numbers) return false;
+  const stockCode = numbers.join('');
+  return stockCode.startsWith('30') || stockCode.startsWith('68');
 };
 
 // 日期处理工具 - 现在从 common/date.js 导入
@@ -977,6 +986,11 @@ watch(selectedDate, (newVal) => {
   padding: 0;
   box-sizing: border-box;
   font-size: 12px;
+}
+
+/* 红色股票代码和名称样式 */
+.red-stock {
+  color: #ff0000 !important;
 }
 
 html, body {
