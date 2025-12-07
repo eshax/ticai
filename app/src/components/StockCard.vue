@@ -926,7 +926,7 @@ watch(selectedDate, (newVal) => {
   box-sizing: border-box;
 }
 
-/* 红色股票代码和名称样式 */
+/* 浅红色股票代码和名称样式 */
 .red-stock {
   color: #ff0000 !important;
 }
@@ -1308,7 +1308,7 @@ body {
 .group-count {
   font-size: 16px;
   font-weight: 600;
-  color: #722ed1;
+  color: #FFFFFF;
   margin-right: 10px;
   min-width: 24px;
   text-align: center;
@@ -1384,8 +1384,8 @@ body {
 }
 
 .stock-card.multi-plate {
-  background-color: #fff8e6 !important;
-  border-color: #fae198 !important;
+  background-color: #faad1424 !important;
+  border-color: #faad1424 !important;
 }
 
 .stock-card.stock-updated {
@@ -1463,8 +1463,8 @@ body {
 .board-indicator {
   font-size: 10px;
   font-weight: 600;
-  color: #722ed1;
-  background-color: rgba(114, 46, 209, 0.1);
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.1);
   padding: 0 2px;
   border-radius: 3px;
   min-width: 20px;

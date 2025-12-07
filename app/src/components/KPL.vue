@@ -38,15 +38,6 @@
               自动更新: {{ autoRefresh ? '开启' : '关闭' }}
               <span v-if="isAutoRefreshManuallySet" class="manual-indicator" title="已手动设置状态"></span>
             </span>
-            <span class="stat-separator">|</span>
-            <span 
-              class="update-tip-status cursor-pointer" 
-              :class="{ 'manually-set': isUpdateTipManuallySet }"
-              @click="toggleUpdateTip"
-            >
-              <i class="fa fa-bell" :class="{ 'fa-shake': showUpdateTip }"></i>
-              更新提示框: {{ showUpdateTip ? '开启' : '关闭' }}
-            </span>
           </div>
 
           <el-date-picker
@@ -132,8 +123,8 @@
       <el-skeleton active v-if="loading" class="loading-container">
         <template #template>
           <div style="padding: 20px;">
-            <div class="skeleton-group-header" style="height: 40px; background: #f5f5f5; margin-bottom: 10px;"></div>
-            <div v-for="i in 5" :key="i" style="height: 36px; background: #f5f5f5; margin-bottom: 5px;"></div>
+            <div class="skeleton-group-header" style="height: 40px; background: #333; margin-bottom: 10px;"></div>
+            <div v-for="i in 5" :key="i" style="height: 36px; background: #333; margin-bottom: 5px;"></div>
           </div>
         </template>
       </el-skeleton>
@@ -174,7 +165,7 @@
                         <i class="fa" :class="isGroupExpanded(tablesData[i-1].theme) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                         <span class="group-theme">
                           {{ tablesData[i-1].theme }}
-                          <span class="group-count">({{ tablesData[i-1].stocks.length }})</span>
+                          <span class="group-count">{{ tablesData[i-1].stocks.length }}</span>
                         </span>
                       </div>
                     </div>
@@ -241,7 +232,7 @@
                         <i class="fa" :class="isGroupExpanded(tablesData[i+7].theme) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                         <span class="group-theme">
                           {{ tablesData[i+7].theme }}
-                          <span class="group-count">({{ tablesData[i+7].stocks.length }})</span>
+                          <span class="group-count">{{ tablesData[i+7].stocks.length }}</span>
                         </span>
                       </div>
                     </div>
@@ -308,7 +299,7 @@
                         <i class="fa" :class="isGroupExpanded(tablesData[i+15].theme) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                         <span class="group-theme">
                           {{ tablesData[i+15].theme }}
-                          <span class="group-count">({{ tablesData[i+15].stocks.length }})</span>
+                          <span class="group-count">{{ tablesData[i+15].stocks.length }}</span>
                         </span>
                       </div>
                     </div>
@@ -612,7 +603,6 @@ const refreshInterval = ref(null);
 const timeCheckInterval = ref(null);
 const isRefreshing = ref(false);
 const showUpdateTip = ref(false);
-const isUpdateTipManuallySet = ref(false);
 const updatedStocks = ref({ added: [], removed: [], changed: [] });
 const groupExpandedState = ref({}); // 用于保存分组展开状态
 const stockChartLoading = ref({}); // 用于跟踪股票图表加载状态
@@ -906,12 +896,6 @@ const toggleAutoRefresh = () => {
   }
 };
 
-// 切换更新提示状态
-const toggleUpdateTip = () => {
-  isUpdateTipManuallySet.value = true;
-  showUpdateTip.value = !showUpdateTip.value;
-};
-
 // 事件处理
 const handleDateChange = (date) => {
   if (date) {
@@ -988,7 +972,7 @@ watch(selectedDate, (newVal) => {
   font-size: 12px;
 }
 
-/* 红色股票代码和名称样式 */
+/* 浅红色股票代码和名称样式 */
 .red-stock {
   color: #ff0000 !important;
 }
@@ -998,15 +982,15 @@ html, body {
   height: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
-  background-color: #f9f9f9 !important;
-  color: #333 !important;
+  background-color: #121212 !important;
+  color: #e0e0e0 !important;
 }
 
 .stock-page {
   height: 98vh;
   display: flex;
   flex-direction: column;
-  background-color: #f9f9f9;
+  background-color: #121212;
 }
 
 .cursor-pointer {
@@ -1083,12 +1067,12 @@ html, body {
   position: fixed;
   top: 70px;
   right: 20px;
-  background-color: #fff;
-  color: #333;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
   border: 1px solid #722ed1;
   border-radius: 4px;
   font-size: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   z-index: 900;
   width: 420px;
   max-height: 450px;
@@ -1098,7 +1082,7 @@ html, body {
 
 .update-tip-header {
   padding: 8px 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #333;
   font-weight: 500;
   color: #722ed1;
   display: flex;
@@ -1224,8 +1208,8 @@ html, body {
   height: 60px !important;
   padding: 0 20px !important;
   margin: 0 !important;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #121212;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   border: none;
   width: 100%;
   z-index: 1000;
@@ -1254,7 +1238,7 @@ html, body {
   margin: 0 !important;
   font-size: 14px !important;
   line-height: 50px;
-  color: #333 !important;
+  color: #e0e0e0 !important;
 }
 
 .header-functions {
@@ -1279,7 +1263,7 @@ html, body {
   align-items: center;
   font-size: 10px;
   white-space: nowrap;
-  color: #666;
+  color: #999;
 }
 
 .stat-item {
@@ -1287,7 +1271,7 @@ html, body {
 }
 
 .stat-separator {
-  color: #ddd;
+  color: #444;
   padding: 0 2px;
 }
 
@@ -1349,7 +1333,7 @@ html, body {
   padding: 10px !important;
   margin: 0 !important;
   margin-top: 60px !important;
-  background-color: #f9f9f9 !important;
+  background-color: #121212 !important;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -1388,12 +1372,12 @@ html, body {
 }
 
 .tables-row::-webkit-scrollbar-thumb {
-  background-color: #ddd;
+  background-color: #444;
   border-radius: 3px;
 }
 
 .tables-row::-webkit-scrollbar-track {
-  background-color: #f5f5f5;
+  background-color: #1e1e1e;
 }
 
 /* 24表格容器样式 - 3行8列布局 */
@@ -1428,14 +1412,14 @@ html, body {
 /* 表格内容容器 */
 .table-container {
   width: 100%;
-  border: 1px solid #e8e8e8;
+  border: 1px solid #333;
   border-radius: 4px;
-  background-color: #fff;
+  background-color: #1e1e1e;
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* 表格滚动内容区 */
@@ -1450,17 +1434,17 @@ html, body {
 }
 
 .table-scrollable-content::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: #121212;
   border-radius: 3px;
 }
 
 .table-scrollable-content::-webkit-scrollbar-thumb {
-  background: #ddd;
+  background: #444;
   border-radius: 3px;
 }
 
 .table-scrollable-content::-webkit-scrollbar-thumb:hover {
-  background: #ccc;
+  background: #555;
 }
 
 /* 分组容器 */
@@ -1478,7 +1462,7 @@ html, body {
 
 /* 题材分组 */
 .theme-group {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #333;
 }
 
 .theme-group:last-child {
@@ -1487,13 +1471,13 @@ html, body {
 
 /* 分组标题 */
 .group-header {
-  background-color: #f7f7fa;
+  background-color: #1e1e1e;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .group-header:hover {
-  background-color: #f0f0f5;
+  background-color: #2d2d2d;
 }
 
 .group-header-content {
@@ -1514,7 +1498,7 @@ html, body {
 .group-theme {
   font-size: 12px;
   font-weight: 500;
-  color: #333;
+  color: #ffd700;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -1526,8 +1510,8 @@ html, body {
 
 .group-count {
   font-size: 9px;
-  color: #722ed1;
-  background-color: rgba(114, 46, 209, 0.1);
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.1);
   padding: 0 3px;
   border-radius: 6px;
   font-weight: normal;
@@ -1555,9 +1539,9 @@ html, body {
   height: 32px;
 }
 
-/* oneline为1时的粉红色背景 - 提高优先级 */
+/* oneline为1时的红色背景 - 提高优先级 */
 .group-stocks > .stock-list-item.one-line {
-  background-color: #fff1f0 !important;
+  background-color: rgb(255 0 0 / 20%) !important;
   background-image: none !important;
 }
 
@@ -1571,26 +1555,26 @@ html, body {
 }
 
 .stock-list-item:hover {
-  background-color: #f9f9f9;
+  background-color: #2d2d2d;
 }
 
 .stock-list-item.stock-updated {
-  background-color: #ffffff;
+  background-color: #1e1e1e;
   animation: pulse 2s ease-in-out;
 }
 
 .stock-list-item.multi-plate {
-  background-color: #f0f7ff;
+  background-color: #faad1424;
 }
 
 .stock-list-item.limit-down {
-  background-color: #f6ffed;
+  background-color: rgba(82, 196, 26, 0.1);
 }
 
 @keyframes pulse {
-  0% { background-color: #ffffff; }
-  50% { background-color: #ffffff; }
-  100% { background-color: #ffffff; }
+  0% { background-color: #1e1e1e; }
+  50% { background-color: rgba(255, 173, 20, 0.1); }
+  100% { background-color: #1e1e1e; }
 }
 
 /* 列表项内容 */
@@ -1619,7 +1603,7 @@ html, body {
 
 .stock-theme {
   font-size: 11px;
-  color: #722ed1;
+  color: #faad14cc;
   font-weight: 500;
 }
 
@@ -1645,8 +1629,8 @@ html, body {
 .board-indicator {
   font-size: 9px;
   font-weight: 600;
-  color: #722ed1;
-  background-color: rgba(114, 46, 209, 0.1);
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.1);
   padding: 1px 3px;
   border-radius: 2px;
   min-width: 16px;
@@ -1658,13 +1642,13 @@ html, body {
 .stock-name {
   font-size: 12px;
   font-weight: 500;
-  color: #333;
+  color: #e0e0e0;
 }
 
 /* 股票代码样式 */
 .stock-code {
   font-size: 9px;
-  color: #666;
+  color: #999;
   /* margin-left: 3px; */
 }
 
@@ -1705,7 +1689,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(30, 30, 30, 0.8);
   z-index: 10;
 }
 
@@ -1729,7 +1713,7 @@ html, body {
 
 /* 骨架屏样式 */
 :deep(.el-skeleton__bg) {
-  background-color: #f5f5f5 !important;
+  background-color: #333 !important;
 }
 
 /* 提示框样式 */

@@ -64,10 +64,21 @@ const navigateTo = (path) => {
 };
 </script>
 
+<style>
+/* 全局样式设置 */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+</style>
+
 <style scoped>
 .app-container {
   min-height: 98vh;
-  background-color: #f0f2f5;
+  background-color: #121212;
   position: relative;
   padding: 0;
   margin: 0;
@@ -96,18 +107,21 @@ const navigateTo = (path) => {
 /* 下拉菜单样式优化 */
 :deep(.el-dropdown-menu) {
   min-width: 120px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   border-radius: 4px;
 }
 
 :deep(.el-dropdown-item) {
   padding: 6px 15px;
   font-size: 13px;
+  color: #e0e0e0;
   transition: background-color 0.2s ease;
 }
 
 :deep(.el-dropdown-item:hover) {
-  background-color: #f5f7fa;
+  background-color: #2d2d2d;
 }
 
 /* 路由视图内容样式，避免被按钮遮挡 */

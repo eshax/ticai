@@ -1491,7 +1491,8 @@ html, body {
 }
 
 .stock-list-item.multi-plate {
-  background-color: #f0f7ff;
+  background-color: #faad1424;
+  background-image: none !important;
 }
 
 .stock-list-item.limit-down {
@@ -1530,7 +1531,7 @@ html, body {
 
 .stock-theme {
   font-size: 11px;
-  color: #722ed1;
+  color: #faad14cc;
   font-weight: 500;
 }
 
