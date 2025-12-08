@@ -27,4 +27,13 @@ const router = createRouter({
   routes
 });
 
+// 全局前置守卫，用于设置页面标题
+router.beforeEach((to, from, next) => {
+  // 设置页面标题
+  if (to.meta.title) {
+    document.title = to.meta.title;
+  }
+  next();
+});
+
 export default router;
