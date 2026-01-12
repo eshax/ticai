@@ -1,6 +1,7 @@
 const http = require('http');
 const https = require('https');
 const url = require('url');
+const iconv = require('iconv-lite');
 const PORT = 8081;
 
 // 缓存配置
@@ -13,11 +14,15 @@ const CACHE_DURATION_HISTORY = 300000; // 历史数据缓存时间5分钟(300000
 //   'kpl-history': {
 //     '2023-05-20': { data: {}, timestamp: 1234567890 },
 //     '2023-05-21': { data: {}, timestamp: 1234567890 }
-//   }
+//   },
+//   'sina-stock': {} // 新浪股票数据按codes参数缓存
+//   'netease-stock': {} // 网易股票数据按codes参数缓存
 // }
 const cache = {
   'kpl-today': { data: null, timestamp: 0 },
-  'kpl-history': {} // 历史数据按Day参数缓存
+  'kpl-history': {}, // 历史数据按Day参数缓存
+  'sina-stock': {}, // 新浪股票数据按codes参数缓存
+  'netease-stock': {} // 网易股票数据按codes参数缓存
 };
 
 // 检查缓存是否有效
@@ -76,6 +81,58 @@ function httpGet(targetUrl, params) {
     });
 
     req.on('error', reject);
+    req.end();
+  });
+}
+
+// 处理GBK编码的HTTP请求函数（用于新浪和网易股票API）
+function httpGetWithGBKEncoding(targetUrl, params = {}, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const parsedUrl = url.parse(targetUrl);
+    const queryString = new URLSearchParams(params).toString();
+    const defaultHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Accept': '*/*',
+      'Accept-Language': 'zh-CN,zh;q=0.9'
+    };
+    const options = {
+      hostname: parsedUrl.hostname,
+      path: `${parsedUrl.pathname}${queryString ? '?' + queryString : ''}`,
+      method: 'GET',
+      headers: {
+        ...defaultHeaders,
+        ...headers
+      }
+    };
+
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
+    const req = protocol.request(options, (res) => {
+      const chunks = [];
+      res.on('data', (chunk) => {
+        chunks.push(chunk);
+      });
+      res.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        try {
+          const data = iconv.decode(buffer, 'gb18030');
+          resolve(data);
+        } catch (e) {
+          console.error(`解码GBK响应失败: ${e.message}`);
+          reject(new Error(`解码响应失败: ${e.message}`));
+        }
+      });
+    });
+
+    // 设置超时
+    req.setTimeout(10000, () => {
+      req.destroy();
+      reject(new Error(`请求超时: ${targetUrl}`));
+    });
+
+    req.on('error', (error) => {
+      console.error(`HTTP请求错误: ${targetUrl} - ${error.message}`);
+      reject(error);
+    });
     req.end();
   });
 }
@@ -256,6 +313,106 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(responseData));
 
+    // 新浪股票API
+    } else if (pathname === '/api/proxy/sina-stock') {
+      const { codes } = query;
+      
+      if (!codes) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          error: '缺少必要参数',
+          message: 'codes参数是必需的'
+        }));
+        return;
+      }
+      
+      console.log(`转发新浪股票数据请求，代码: ${codes}`);
+      
+      // 检查缓存
+      if (cache['sina-stock'][codes] && isCacheValid(cache['sina-stock'][codes])) {
+        console.log(`[缓存命中] 返回新浪股票数据，代码: ${codes}`);
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(cache['sina-stock'][codes].data);
+        return;
+      }
+      
+      // 新浪股票接口
+      const url = `https://hq.sinajs.cn/list=${codes}`;
+      // 添加请求头模拟浏览器请求，解决403问题
+      const headers = {
+        'Referer': 'https://finance.sina.com.cn/'
+      };
+      
+      try {
+        const response = await httpGetWithGBKEncoding(url, {}, headers);
+        
+        // 缓存结果
+        cache['sina-stock'][codes] = {
+          data: response,
+          timestamp: Date.now()
+        };
+        
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(response);
+      } catch (error) {
+        console.error(`转发新浪股票数据请求失败: ${codes} - ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          error: '服务器内部错误',
+          message: error.message
+        }));
+      }
+    
+    // 网易股票API
+    } else if (pathname === '/api/proxy/netease-stock') {
+      const { codes } = query;
+      
+      if (!codes) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          error: '缺少必要参数',
+          message: 'codes参数是必需的'
+        }));
+        return;
+      }
+      
+      console.log(`转发网易财经股票数据请求，代码: ${codes}`);
+      
+      // 检查缓存
+      if (cache['netease-stock'][codes] && isCacheValid(cache['netease-stock'][codes])) {
+        console.log(`[缓存命中] 返回网易股票数据，代码: ${codes}`);
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(cache['netease-stock'][codes].data);
+        return;
+      }
+      
+      // 网易财经接口
+      const url = `http://api.money.126.net/data/feed/${codes},jsonp=callback`;
+      // 添加请求头模拟浏览器请求，解决403问题
+      const headers = {
+        'Referer': 'http://money.163.com/'
+      };
+      
+      try {
+        const response = await httpGetWithGBKEncoding(url, {}, headers);
+        
+        // 缓存结果
+        cache['netease-stock'][codes] = {
+          data: response,
+          timestamp: Date.now()
+        };
+        
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(response);
+      } catch (error) {
+        console.error(`转发网易财经股票数据请求失败: ${codes} - ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          error: '服务器内部错误',
+          message: error.message
+        }));
+      }
+    
     // 健康检查端点
     } else if (pathname === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });

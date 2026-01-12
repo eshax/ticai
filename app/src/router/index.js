@@ -2,6 +2,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import KPL from '@/components/KPL.vue';
 import XGT from '../components/XGT.vue';
+import YQGL from '../components/YQGL.vue';
 
 const routes = [
   { 
@@ -15,6 +16,12 @@ const routes = [
     name: 'xgt',
     component: XGT,
     meta: { title: '选股通' }
+  },
+  { 
+    path: '/yqgl', 
+    name: 'yqgl',
+    component: YQGL,
+    meta: { title: '预期管理' }
   },
   { 
     path: '/', 

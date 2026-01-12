@@ -14,6 +14,9 @@
           <el-dropdown-item @click="navigateTo('/xgt')">
             <i class="fa fa-table mr-1"></i>选股通
           </el-dropdown-item>
+          <el-dropdown-item @click="navigateTo('/yqgl')">
+            <i class="fa fa-bell mr-1"></i>预期管理
+          </el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>
@@ -42,6 +45,8 @@ const setDataSourceName = () => {
     currentDataSource.value = '数据源：开盘啦';
   } else if (path === '/xgt') {
     currentDataSource.value = '数据源：选股通';
+  } else if (path === '/yqgl') {
+    currentDataSource.value = '数据源：预期管理';
   } else {
     currentDataSource.value = '数据源';
   }

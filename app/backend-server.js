@@ -3,6 +3,8 @@ const axios = require('axios');
 const cors = require('cors');
 const app = express();
 const PORT = 8081;
+const iconv = require('iconv-lite');
+iconv.skipDecodeWarning = true;
 
 // 启用CORS，允许所有来源的请求
 app.use(cors());
@@ -249,10 +251,194 @@ app.get('/health', (req, res) => {
   });
 });
 
+/**
+ * 转发到新浪股票数据API
+ * GET /api/proxy/sina-stock?codes=sz001331,sh600337
+ */
+app.get('/api/proxy/sina-stock', async (req, res, next) => {
+  try {
+    const { codes } = req.query;
+    
+    if (!codes) {
+      return res.status(400).json({
+        error: '缺少必要参数',
+        message: 'codes参数是必需的'  
+      });
+    }
+    
+    console.log(`转发新浪股票数据请求，代码: ${codes}`);
+    
+    // 新浪股票接口
+    const url = `https://hq.sinajs.cn/list=${codes}`;
+    // 添加请求头模拟浏览器请求，解决403问题
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Referer': 'https://finance.sina.com.cn/',
+      'Accept': '*/*',
+      'Accept-Language': 'zh-CN,zh;q=0.9'
+    };
+    
+    // 以二进制形式获取响应，避免自动解码
+    const response = await axios.get(url, { 
+      headers,
+      responseType: 'arraybuffer'
+    });
+    
+    // 将GBK编码转换为UTF-8
+    const utf8Data = iconv.decode(response.data, 'gb18030');
+    
+    res.send(utf8Data);
+  } catch (error) {
+    console.error('转发新浪股票数据请求失败:', error.message);
+    res.status(500).json({
+      error: '服务器内部错误',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * 转发到网易财经股票数据API
+ * GET /api/proxy/netease-stock?codes=sz001331,sh600337
+ */
+app.get('/api/proxy/netease-stock', async (req, res, next) => {
+  try {
+    const { codes } = req.query;
+    
+    if (!codes) {
+      return res.status(400).json({
+        error: '缺少必要参数',
+        message: 'codes参数是必需的'  
+      });
+    }
+    
+    console.log(`转发网易财经股票数据请求，代码: ${codes}`);
+    
+    // 网易财经接口
+    const url = `http://api.money.126.net/data/feed/${codes},jsonp=callback`;
+    // 添加请求头模拟浏览器请求，避免403问题
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Referer': 'http://money.163.com/',
+      'Accept': '*/*',
+      'Accept-Language': 'zh-CN,zh;q=0.9'
+    };
+    
+    // 以二进制形式获取响应，避免自动解码
+    const response = await axios.get(url, { 
+      headers,
+      responseType: 'arraybuffer'
+    });
+    
+    // 将GBK编码转换为UTF-8
+    const utf8Data = iconv.decode(response.data, 'gb18030');
+    
+    res.send(utf8Data);
+  } catch (error) {
+    console.error('转发网易财经股票数据请求失败:', error.message);
+    res.status(500).json({
+      error: '服务器内部错误',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * 转发到新浪财经搜索API
+ * GET /api/proxy/sina-search?keyword=天普股份
+ */
+app.get('/api/proxy/sina-search', async (req, res, next) => {
+  try {
+    const { keyword } = req.query;
+    
+    if (!keyword) {
+      return res.status(400).json({
+        error: '缺少必要参数',
+        message: 'keyword参数是必需的'  
+      });
+    }
+    
+    console.log(`转发新浪财经搜索请求，关键词: ${keyword}`);
+    
+    // 新浪财经搜索接口 - 这里使用的是示例接口，实际使用时需要确认正确的API
+    // 注意：新浪的搜索API可能会有变化或限制
+    const url = `https://suggest3.sinajs.cn/suggest/type=11,12&key=${encodeURIComponent(keyword)}`;
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Referer': 'https://finance.sina.com.cn/',
+      'Accept': '*/*',
+      'Accept-Language': 'zh-CN,zh;q=0.9'
+    };
+    
+    const response = await axios.get(url, { headers });
+    
+    // 解析新浪搜索API响应
+    console.log(`新浪搜索API原始响应: ${response.data}`);
+    const data = response.data;
+    
+    // 尝试多种解析方式
+    try {
+      // 方式1：原始格式解析 - var SuggestNews1 = ["天普股份","sz002709","天普股份","天普股份最新消息","天普股份股吧"];
+      let match = data.match(/\[(.*)\]/);
+      
+      if (match) {
+        // 解析JSON数组
+        const suggestions = JSON.parse(`[${match[1]}]`);
+        console.log(`解析后的搜索结果数组: ${JSON.stringify(suggestions)}`);
+        
+        // 构建标准响应格式
+        const result = {
+          data: []
+        };
+        
+        // 处理搜索结果 - 检查数组长度是否足够
+        if (suggestions.length >= 2) {
+          // 如果结果只有一组数据
+          if (suggestions.length < 10) {
+            const name = suggestions[0];
+            const code = suggestions[1];
+            if (name && code) {
+              result.data.push({name, code});
+            }
+          } else {
+            // 处理多组数据，每组5个元素
+            for (let i = 0; i < suggestions.length; i += 5) {
+              const name = suggestions[i];
+              const code = suggestions[i + 1];
+              
+              if (name && code) {
+                result.data.push({name, code});
+              }
+            }
+          }
+        }
+        
+        console.log(`构建的搜索结果: ${JSON.stringify(result)}`);
+        res.json(result);
+        return;
+      }
+    } catch (error) {
+      console.error(`解析搜索结果失败: ${error.message}`);
+    }
+    
+    // 如果所有解析方式都失败，返回原始数据
+    res.send(data);
+  } catch (error) {
+    console.error('转发新浪财经搜索请求失败:', error.message);
+    res.status(500).json({
+      error: '服务器内部错误',
+      message: error.message
+    });
+  }
+});
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`后端转发服务已启动，监听端口 ${PORT}`);
   console.log(`历史数据API: http://localhost:${PORT}/api/proxy/history?Day=YYYY-MM-DD`);
   console.log(`今日数据API: http://localhost:${PORT}/api/proxy/today`);
+  console.log(`新浪股票API: http://localhost:${PORT}/api/proxy/sina-stock?codes=sz001331,sh600337`);
+  console.log(`网易股票API: http://localhost:${PORT}/api/proxy/netease-stock?codes=sz001331,sh600337`);
+  console.log(`新浪搜索API: http://localhost:${PORT}/api/proxy/sina-search?keyword=天普股份`);
   console.log(`健康检查: http://localhost:${PORT}/health`);
 });

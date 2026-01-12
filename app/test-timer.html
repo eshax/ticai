@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>定时器测试</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .stock-item {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+    .positive {
+      color: red;
+    }
+    .negative {
+      color: green;
+    }
+    .zero {
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>股票数据定时器测试</h1>
+    <div v-for="stock in stocks" :key="stock.code" class="stock-item">
+      <span>{{ stock.name }} ({{ stock.code }})</span>
+      <span>预期: {{ stock.expected }}</span>
+      <span>实际涨幅: {{ stock.actual.toFixed(2) }}%</span>
+      <span :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+        预期差: {{ stock.diff.toFixed(2) }}
+      </span>
+    </div>
+    <button @click="addTestStock">添加测试股票</button>
+    <button @click="startTimer">启动定时器</button>
+    <button @click="stopTimer">停止定时器</button>
+    <div id="log"></div>
+  </div>
+
+  <script>
+    const { createApp, ref, onMounted, onBeforeUnmount } = Vue;
+    
+    createApp({
+      setup() {
+        const stocks = ref([
+          { name: '胜通能源', code: 'sz001331', expected: -3, actual: 0, diff: 3 },
+          { name: '美克家居', code: 'sh600337', expected: -7, actual: 0, diff: 7 }
+        ]);
+        
+        let updateTimer = null;
+        
+        const log = (message) => {
+          const logDiv = document.getElementById('log');
+          const p = document.createElement('p');
+          p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+          logDiv.appendChild(p);
+          // 只保留最新10条日志
+          if (logDiv.children.length > 10) {
+            logDiv.removeChild(logDiv.firstChild);
+          }
+        };
+        
+        // 模拟获取股票数据
+        const fetchStockData = async (stock) => {
+          // 模拟API请求延迟
+          await new Promise(resolve => setTimeout(resolve, 100));
+          // 随机生成实际涨幅
+          return (Math.random() - 0.5) * 20;
+        };
+        
+        // 更新所有股票的实时数据
+        const updateStockData = async () => {
+          log('开始更新股票数据');
+          
+          for (const stock of stocks.value) {
+            try {
+              const actual = await fetchStockData(stock);
+              // 确保响应式更新
+              const diff = actual - stock.expected;
+              const stockIndex = stocks.value.findIndex(s => s.code === stock.code);
+              if (stockIndex !== -1) {
+                stocks.value[stockIndex] = {...stocks.value[stockIndex], actual, diff};
+              }
+              log(`股票 ${stock.name} 更新成功，实际涨幅：${actual.toFixed(2)}%`);
+            } catch (error) {
+              log(`更新股票 ${stock.name} 失败：${error.message}`);
+            }
+          }
+          log('股票数据更新完成');
+        };
+        
+        // 定时更新股票数据
+        const startTimer = () => {
+          if (!updateTimer) {
+            updateTimer = setInterval(async () => {
+              log('定时器触发，开始执行数据更新');
+              await updateStockData();
+              log('数据更新完成');
+            }, 3000); // 每3秒更新一次
+            log('股票数据定时器已启动，每3秒更新一次');
+          }
+        };
+        
+        // 清理定时器
+        const stopTimer = () => {
+          if (updateTimer) {
+            clearInterval(updateTimer);
+            updateTimer = null;
+            log('清理股票数据定时器');
+          }
+        };
+        
+        // 添加测试股票
+        const addTestStock = () => {
+          const newStock = {
+            name: `测试股票${stocks.value.length + 1}`,
+            code: `test${stocks.value.length + 1}`,
+            expected: (Math.random() - 0.5) * 10,
+            actual: 0,
+            diff: 0
+          };
+          stocks.value.push(newStock);
+          log(`添加测试股票：${newStock.name}`);
+        };
+        
+        // 组件挂载时启动定时器
+        onMounted(() => {
+          log('组件已挂载，准备启动定时器');
+          // 立即执行一次更新
+          updateStockData();
+          // 启动定时器
+          startTimer();
+        });
+        
+        // 组件卸载时清理定时器
+        onBeforeUnmount(() => {
+          stopTimer();
+        });
+        
+        return {
+          stocks,
+          startTimer,
+          stopTimer,
+          addTestStock
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
