@@ -16,13 +16,11 @@ const CACHE_DURATION_HISTORY = 300000; // 历史数据缓存时间5分钟(300000
 //     '2023-05-21': { data: {}, timestamp: 1234567890 }
 //   },
 //   'sina-stock': {} // 新浪股票数据按codes参数缓存
-//   'netease-stock': {} // 网易股票数据按codes参数缓存
 // }
 const cache = {
   'kpl-today': { data: null, timestamp: 0 },
   'kpl-history': {}, // 历史数据按Day参数缓存
-  'sina-stock': {}, // 新浪股票数据按codes参数缓存
-  'netease-stock': {} // 网易股票数据按codes参数缓存
+  'sina-stock': {} // 新浪股票数据按codes参数缓存
 };
 
 // 检查缓存是否有效

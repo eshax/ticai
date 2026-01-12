@@ -381,7 +381,7 @@ const addMarketPrefix = (code) => {
 const fetchStockDataFromSina = async (stock) => {
   try {
     // 通过后端代理的新浪股票接口
-    const url = `/api/proxy/sina-stock?codes=${stock.code}`;
+    const url = `http://localhost:8081/api/proxy/sina-stock?codes=${stock.code}`;
     const response = await axios.get(url);
     
     // 解析返回数据
@@ -408,50 +408,17 @@ const fetchStockDataFromSina = async (stock) => {
   }
 };
 
-// 获取单个股票的实时数据 - 网易财经备用接口（通过后端代理）
-const fetchStockDataFromNetEase = async (stock) => {
-  try {
-    // 通过后端代理的网易财经接口
-    const url = `/api/proxy/netease-stock?codes=${stock.code}`;
-    const response = await axios.get(url);
-    
-    // 解析返回数据
-    const data = response.data;
-    // 格式：callback({"sh600000":{"code":"sh600000","name":"浦发银行","close":9.88,...}});
-    const jsonStr = data.match(/callback\((.*)\)/)[1];
-    const stockData = JSON.parse(jsonStr)[stock.code];
-    
-    if (stockData) {
-      const name = stockData.name; // 股票名称
-      const prevClose = stockData.yestclose || stockData.close;
-      const current = stockData.close;
-      
-      // 计算实际涨幅
-      const actual = ((current - prevClose) / prevClose) * 100;
-      return { actual, name };
-    }
-    throw new Error('网易接口数据解析失败');
-  } catch (error) {
-    console.error('网易接口获取失败:', error);
-    throw error;
-  }
-};
 
-// 获取单个股票的实时数据（自动切换接口）
+
+// 获取单个股票的实时数据（仅使用新浪接口）
 const fetchStockData = async (stock) => {
   try {
-    // 优先使用新浪接口
+    // 仅使用新浪接口
     return await fetchStockDataFromSina(stock);
   } catch (sinaError) {
-    try {
-      // 新浪接口失败时，使用网易财经备用接口
-      console.log('新浪接口不可用，切换到网易财经接口');
-      return await fetchStockDataFromNetEase(stock);
-    } catch (neteaseError) {
-      // 所有接口都失败时，返回默认值
-      console.error('所有股票接口都不可用:', neteaseError);
-      return { actual: 0, name: stock.code }; // 使用股票代码作为名称
-    }
+    // 新浪接口失败时，返回默认值
+    console.error('新浪股票接口不可用:', sinaError);
+    return { actual: 0, name: stock.code }; // 使用股票代码作为名称
   }
 };
 
