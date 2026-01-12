@@ -381,7 +381,7 @@ const addMarketPrefix = (code) => {
 const fetchStockDataFromSina = async (stock) => {
   try {
     // 通过后端代理的新浪股票接口
-    const url = `http://localhost:8081/api/proxy/sina-stock?codes=${stock.code}`;
+    const url = `/api/proxy/sina-stock?codes=${stock.code}`;
     const response = await axios.get(url);
     
     // 解析返回数据
@@ -412,7 +412,7 @@ const fetchStockDataFromSina = async (stock) => {
 const fetchStockDataFromNetEase = async (stock) => {
   try {
     // 通过后端代理的网易财经接口
-    const url = `http://localhost:8081/api/proxy/netease-stock?codes=${stock.code}`;
+    const url = `/api/proxy/netease-stock?codes=${stock.code}`;
     const response = await axios.get(url);
     
     // 解析返回数据
