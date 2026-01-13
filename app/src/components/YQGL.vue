@@ -611,7 +611,7 @@ onBeforeUnmount(() => {
 }
 
 h1 {
-  font-size: 24px;
+  font-size: 16px;
   margin-bottom: 20px;
   color: #409eff;
   text-align: center;
@@ -629,8 +629,8 @@ h1 {
   display: flex;
   flex-direction: column;
   background-color: #1e1e1e;
-  border-radius: 8px;
-  padding: 15px;
+  border-radius: 6px;
+  padding: 12px;
   min-height: 0;
 }
 
@@ -638,11 +638,11 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 .list-header h2 {
-  font-size: 14px;
+  font-size: 10px;
   color: #409eff;
   margin: 0;
 }
@@ -654,10 +654,10 @@ h1 {
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -669,8 +669,8 @@ h1 {
 
 /* 顶部股票信息样式 */
 .top-stocks {
-  margin-left: 15px;
-  font-size: 13px;
+  margin-left: 12px;
+  font-size: 12px;
   color: #e0e0e0;
   white-space: nowrap;
   overflow: hidden;
@@ -713,7 +713,7 @@ h1 {
   padding: 12px;
   text-align: center;
   border-bottom: 1px solid #333;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .stock-table th {
@@ -770,7 +770,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 12px;
   border-bottom: 1px solid #333;
 }
 
@@ -807,7 +807,7 @@ h1 {
   border: 1px solid #333;
   border-radius: 4px;
   padding: 10px;
-  font-size: 14px;
+  font-size: 12px;
   resize: vertical;
   box-sizing: border-box;
   flex-grow: 1;
