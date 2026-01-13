@@ -377,48 +377,64 @@ const addMarketPrefix = (code) => {
   return code; // 无法判断，返回原始代码
 };
 
-// 获取单个股票的实时数据 - 新浪接口（通过后端代理）
-const fetchStockDataFromSina = async (stock) => {
+// 注意：原fetchStockDataFromSina函数已被批量请求函数替代，不再使用
+
+
+
+// 注意：fetchStockData函数已被fetchBatchStockData替代，不再使用
+// 保持fetchStockDataFromSina函数用于向后兼容
+
+// 获取多个股票的实时数据 - 使用腾讯股票接口（批量请求）
+const fetchBatchStockData = async (stocks) => {
   try {
-    // 通过后端代理的新浪股票接口
-    const url = `http://localhost:8081/api/proxy/sina-stock?codes=${stock.code}`;
-    const response = await axios.get(url);
-    
-    // 解析返回数据
-    const data = response.data;
-    // 格式：var hq_str_sh600000="浦发银行,9.800,9.810,9.880,9.930,9.760,9.880,9.890,...";
-    const match = data.match(/"(.*)"/);
-    
-    if (match) {
-      const values = match[1].split(',');
-      if (values.length >= 4) {
-        const name = values[0]; // 股票名称
-        const prevClose = parseFloat(values[2]); // 昨日收盘价
-        const current = parseFloat(values[3]); // 当前价格
-        
-        // 计算实际涨幅
-        const actual = ((current - prevClose) / prevClose) * 100;
-        return { actual, name };
-      }
+    if (!stocks || stocks.length === 0) {
+      return {};
     }
-    throw new Error('新浪接口数据解析失败');
+    
+    // 准备所有股票代码，确保格式正确
+    const codes = stocks.map(stock => {
+      let code = stock.code;
+      if (!code.startsWith('sh') && !code.startsWith('sz')) {
+        code = `sz${code}`;
+      }
+      return code;
+    }).join(',');
+    
+    // 使用腾讯股票接口批量获取数据
+    const url = `https://qt.gtimg.cn/q=${codes}`;
+    console.log('批量请求腾讯股票接口:', url);
+    
+    const response = await axios.get(url);
+    const data = response.data;
+    
+    // 解析所有股票数据
+    const result = {};
+    const codeList = codes.split(',');
+    
+    codeList.forEach(code => {
+      // 匹配当前股票的数据
+      const match = data.match(new RegExp(`v_${code}="([^"]+)"`));
+      
+      if (match) {
+        const values = match[1].split('~');
+        if (values.length >= 5) {
+          const name = values[1]; // 股票名称 (索引1)
+          const prevClose = parseFloat(values[4]); // 昨日收盘价 (索引4)
+          const current = parseFloat(values[3]); // 当前价格 (索引3)
+          
+          if (!isNaN(prevClose) && !isNaN(current)) {
+            // 计算实际涨幅
+            const actual = ((current - prevClose) / prevClose) * 100;
+            result[code] = { actual, name };
+          }
+        }
+      }
+    });
+    
+    return result;
   } catch (error) {
-    console.error('新浪接口获取失败:', error);
+    console.error('批量获取股票数据失败:', error);
     throw error;
-  }
-};
-
-
-
-// 获取单个股票的实时数据（仅使用新浪接口）
-const fetchStockData = async (stock) => {
-  try {
-    // 仅使用新浪接口
-    return await fetchStockDataFromSina(stock);
-  } catch (sinaError) {
-    // 新浪接口失败时，返回默认值
-    console.error('新浪股票接口不可用:', sinaError);
-    return { actual: 0, name: stock.code }; // 使用股票代码作为名称
   }
 };
 
@@ -439,38 +455,52 @@ const updateStockData = async () => {
       return;
     }
   
-  // 使用Promise.all并行更新所有股票数据
-  const updatePromises = allStocks.map(async (stock) => {
+  // 使用批量请求获取所有股票数据
+  const stockDataMap = await fetchBatchStockData(allStocks);
+  
+  // 更新所有股票数据
+  allStocks.forEach(stock => {
     try {
-      const { actual, name } = await fetchStockData(stock);
-      // 确保响应式更新
-      const diff = actual - stock.expected;
-      // 找到股票在原列表中的索引并更新
-      const stockIndex1 = list1.value.findIndex(s => s.code === stock.code);
-      const stockIndex2 = list2.value.findIndex(s => s.code === stock.code);
-      const stockIndex3 = list3.value.findIndex(s => s.code === stock.code);
-      const stockIndex4 = list4.value.findIndex(s => s.code === stock.code);
-      
-      if (stockIndex1 !== -1) {
-        list1.value[stockIndex1] = {...list1.value[stockIndex1], name, actual, diff};
-      }
-      if (stockIndex2 !== -1) {
-        list2.value[stockIndex2] = {...list2.value[stockIndex2], name, actual, diff};
-      }
-      if (stockIndex3 !== -1) {
-        list3.value[stockIndex3] = {...list3.value[stockIndex3], name, actual, diff};
-      }
-      if (stockIndex4 !== -1) {
-        list4.value[stockIndex4] = {...list4.value[stockIndex4], name, actual, diff};
+      // 确保股票代码格式正确（添加市场前缀）
+      let code = stock.code;
+      if (!code.startsWith('sh') && !code.startsWith('sz')) {
+        code = `sz${code}`;
       }
       
-      console.log(`股票 ${name} 更新成功，实际涨幅：${actual}`);
+      // 获取当前股票的数据
+      const stockData = stockDataMap[code];
+      
+      if (stockData) {
+        const { actual, name } = stockData;
+        // 确保响应式更新
+        const diff = actual - stock.expected;
+        // 找到股票在原列表中的索引并更新
+        const stockIndex1 = list1.value.findIndex(s => s.code === stock.code);
+        const stockIndex2 = list2.value.findIndex(s => s.code === stock.code);
+        const stockIndex3 = list3.value.findIndex(s => s.code === stock.code);
+        const stockIndex4 = list4.value.findIndex(s => s.code === stock.code);
+        
+        if (stockIndex1 !== -1) {
+          list1.value[stockIndex1] = {...list1.value[stockIndex1], name, actual, diff};
+        }
+        if (stockIndex2 !== -1) {
+          list2.value[stockIndex2] = {...list2.value[stockIndex2], name, actual, diff};
+        }
+        if (stockIndex3 !== -1) {
+          list3.value[stockIndex3] = {...list3.value[stockIndex3], name, actual, diff};
+        }
+        if (stockIndex4 !== -1) {
+          list4.value[stockIndex4] = {...list4.value[stockIndex4], name, actual, diff};
+        }
+        
+        console.log(`股票 ${name} 更新成功，实际涨幅：${actual}`);
+      } else {
+        console.error(`没有找到股票 ${stock.code} 的数据`);
+      }
     } catch (error) {
       console.error(`更新股票 ${stock.code} 失败：${error}`);
     }
   });
-  
-  await Promise.all(updatePromises);
   
   // 更新完成后，按照差值倒序排序所有列表
   list1.value.sort((a, b) => b.diff - a.diff);
@@ -612,7 +642,7 @@ h1 {
 }
 
 .list-header h2 {
-  font-size: 18px;
+  font-size: 14px;
   color: #409eff;
   margin: 0;
 }
@@ -640,7 +670,7 @@ h1 {
 /* 顶部股票信息样式 */
 .top-stocks {
   margin-left: 15px;
-  font-size: 14px;
+  font-size: 13px;
   color: #e0e0e0;
   white-space: nowrap;
   overflow: hidden;
@@ -683,7 +713,7 @@ h1 {
   padding: 12px;
   text-align: center;
   border-bottom: 1px solid #333;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .stock-table th {
