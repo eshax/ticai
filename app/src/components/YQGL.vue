@@ -21,9 +21,8 @@
           <table class="stock-table">
             <thead>
               <tr>
-                <th style="width: 60px;">序号</th>
-                <th>代码</th>
-                <th>名称</th>
+                <th>股票（{{ list1.length }}）</th>
+                <th>封单</th>
                 <th>预期</th>
                 <th>涨幅</th>
                 <th>差值</th>
@@ -31,14 +30,15 @@
             </thead>
             <tbody>
               <tr v-if="list1.length === 0">
-                <td colspan="6" style="text-align: center; padding: 40px;">
+                <td colspan="5" style="text-align: center; padding: 40px;">
                   暂无股票数据
                 </td>
               </tr>
-              <tr v-else v-for="(stock, index) in list1" :key="stock.code">
-                <td>{{ index + 1 }}</td>
-                <td>{{ stock.code }}</td>
-                <td>{{ stock.name }}</td>
+              <tr v-else v-for="stock in list1" :key="stock.code">
+                <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
+                  {{ formatFund(stock.fund) }}
+                </td>
                 <td>{{ stock.expected }}</td>
                 <td>{{ stock.actual.toFixed(2) }}%</td>
                 <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
@@ -69,9 +69,9 @@
           <table class="stock-table">
             <thead>
               <tr>
-                <th style="width: 60px;">序号</th>
-                <th>代码</th>
-                <th>名称</th>
+
+                <th>股票（{{ list2.length }}）</th>
+                <th>封单</th>
                 <th>预期</th>
                 <th>涨幅</th>
                 <th>差值</th>
@@ -79,14 +79,16 @@
             </thead>
             <tbody>
               <tr v-if="list2.length === 0">
-                <td colspan="6" style="text-align: center; padding: 40px;">
+                <td colspan="5" style="text-align: center; padding: 40px;">
                   暂无股票数据
                 </td>
               </tr>
-              <tr v-else v-for="(stock, index) in list2" :key="stock.code">
-                <td>{{ index + 1 }}</td>
-                <td>{{ stock.code }}</td>
-                <td>{{ stock.name }}</td>
+              <tr v-else v-for="stock in list2" :key="stock.code">
+
+                <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
+                  {{ formatFund(stock.fund) }}
+                </td>
                 <td>{{ stock.expected }}</td>
                 <td>{{ stock.actual.toFixed(2) }}%</td>
                 <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
@@ -117,9 +119,9 @@
           <table class="stock-table">
             <thead>
               <tr>
-                <th style="width: 60px;">序号</th>
-                <th>代码</th>
-                <th>名称</th>
+
+                <th>股票（{{ list3.length }}）</th>
+                <th>封单</th>
                 <th>预期</th>
                 <th>涨幅</th>
                 <th>差值</th>
@@ -127,14 +129,16 @@
             </thead>
             <tbody>
               <tr v-if="list3.length === 0">
-                <td colspan="6" style="text-align: center; padding: 40px;">
+                <td colspan="5" style="text-align: center; padding: 40px;">
                   暂无股票数据
                 </td>
               </tr>
-              <tr v-else v-for="(stock, index) in list3" :key="stock.code">
-                <td>{{ index + 1 }}</td>
-                <td>{{ stock.code }}</td>
-                <td>{{ stock.name }}</td>
+              <tr v-else v-for="stock in list3" :key="stock.code">
+
+                <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
+                  {{ formatFund(stock.fund) }}
+                </td>
                 <td>{{ stock.expected }}</td>
                 <td>{{ stock.actual.toFixed(2) }}%</td>
                 <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
@@ -165,9 +169,9 @@
           <table class="stock-table">
             <thead>
               <tr>
-                <th style="width: 60px;">序号</th>
-                <th>代码</th>
-                <th>名称</th>
+
+                <th>股票（{{ list4.length }}）</th>
+                <th>封单</th>
                 <th>预期</th>
                 <th>涨幅</th>
                 <th>差值</th>
@@ -175,14 +179,16 @@
             </thead>
             <tbody>
               <tr v-if="list4.length === 0">
-                <td colspan="6" style="text-align: center; padding: 40px;">
+                <td colspan="5" style="text-align: center; padding: 40px;">
                   暂无股票数据
                 </td>
               </tr>
-              <tr v-else v-for="(stock, index) in list4" :key="stock.code">
-                <td>{{ index + 1 }}</td>
-                <td>{{ stock.code }}</td>
-                <td>{{ stock.name }}</td>
+              <tr v-else v-for="stock in list4" :key="stock.code">
+
+                <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
+                  {{ formatFund(stock.fund) }}
+                </td>
                 <td>{{ stock.expected }}</td>
                 <td>{{ stock.actual.toFixed(2) }}%</td>
                 <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
@@ -384,6 +390,22 @@ const addMarketPrefix = (code) => {
 // 注意：fetchStockData函数已被fetchBatchStockData替代，不再使用
 // 保持fetchStockDataFromSina函数用于向后兼容
 
+// 格式化封单额显示
+const formatFund = (fund) => {
+  if (!fund || fund <= 0) return '-';
+  
+  // 一亿等于10000万
+  if (fund < 100000000) {
+    // 不足一亿，显示为xxx万
+    const amount = (fund / 10000).toFixed(2);
+    return `${amount}万`;
+  } else {
+    // 一亿以上，显示为xxx亿
+    const amount = (fund / 100000000).toFixed(2);
+    return `${amount}亿`;
+  }
+};
+
 // 获取多个股票的实时数据 - 使用腾讯股票接口（批量请求）
 const fetchBatchStockData = async (stocks) => {
   try {
@@ -422,10 +444,33 @@ const fetchBatchStockData = async (stocks) => {
           const prevClose = parseFloat(values[4]); // 昨日收盘价 (索引4)
           const current = parseFloat(values[3]); // 当前价格 (索引3)
           
+          // 根据腾讯API文档，通常：
+          // 买一价格: values[9]
+          // 买一数量: values[10]
+          // 卖一价格: values[11]
+          // 卖一数量: values[12]
+          const buy1Price = parseFloat(values[9]);
+          const buy1Volume = parseFloat(values[10]);
+          const sell1Price = parseFloat(values[19]);
+          const sell1Volume = parseFloat(values[20]);
+          
           if (!isNaN(prevClose) && !isNaN(current)) {
             // 计算实际涨幅
             const actual = ((current - prevClose) / prevClose) * 100;
-            result[code] = { actual, name };
+            
+            // 计算封单额
+            let fund = 0;
+            let fundType = ''; // 'buy' 或 'sell'
+            // 判断是涨停还是跌停
+            if (actual >= 9.9) { // 涨停 - 买入封单
+              fund = buy1Price * buy1Volume * 100;
+              fundType = 'buy';
+            } else if (actual <= -9.9) { // 跌停 - 卖出封单
+              fund = sell1Price * sell1Volume * 100;
+              fundType = 'sell';
+            }
+            
+            result[code] = { actual, name, fund, fundType };
           }
         }
       }
@@ -471,7 +516,7 @@ const updateStockData = async () => {
       const stockData = stockDataMap[code];
       
       if (stockData) {
-        const { actual, name } = stockData;
+        const { actual, name, fund, fundType } = stockData;
         // 确保响应式更新
         const diff = actual - stock.expected;
         // 找到股票在原列表中的索引并更新
@@ -481,16 +526,16 @@ const updateStockData = async () => {
         const stockIndex4 = list4.value.findIndex(s => s.code === stock.code);
         
         if (stockIndex1 !== -1) {
-          list1.value[stockIndex1] = {...list1.value[stockIndex1], name, actual, diff};
+          list1.value[stockIndex1] = {...list1.value[stockIndex1], name, actual, diff, fund, fundType};
         }
         if (stockIndex2 !== -1) {
-          list2.value[stockIndex2] = {...list2.value[stockIndex2], name, actual, diff};
+          list2.value[stockIndex2] = {...list2.value[stockIndex2], name, actual, diff, fund, fundType};
         }
         if (stockIndex3 !== -1) {
-          list3.value[stockIndex3] = {...list3.value[stockIndex3], name, actual, diff};
+          list3.value[stockIndex3] = {...list3.value[stockIndex3], name, actual, diff, fund, fundType};
         }
         if (stockIndex4 !== -1) {
-          list4.value[stockIndex4] = {...list4.value[stockIndex4], name, actual, diff};
+          list4.value[stockIndex4] = {...list4.value[stockIndex4], name, actual, diff, fund, fundType};
         }
         
         console.log(`股票 ${name} 更新成功，实际涨幅：${actual}`);
@@ -603,7 +648,7 @@ onBeforeUnmount(() => {
 }
 
 .yqgl-container {
-  padding: 20px;
+  padding: 12px;
   min-height: 100vh;
   background-color: #121212;
   color: #e0e0e0;
@@ -611,17 +656,16 @@ onBeforeUnmount(() => {
 }
 
 h1 {
-  font-size: 16px;
-  margin-bottom: 20px;
+  font-size: 14px;
+  margin-bottom: 12px;
   color: #409eff;
   text-align: center;
 }
 
 .lists-container {
   display: flex;
-  height: calc(100vh - 80px);
-  gap: 20px;
-  margin-top: 40px;
+  height: calc(100vh - 24px);
+  gap: 12px;
 }
 
 .list-container {
@@ -714,6 +758,12 @@ h1 {
   text-align: center;
   border-bottom: 1px solid #333;
   font-size: 12px;
+}
+
+/* 股票列左对齐 */
+.stock-table th:first-child,
+.stock-table td:first-child {
+  text-align: left;
 }
 
 .stock-table th {

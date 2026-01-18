@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
-    <!-- 组合按钮 - 固定在页面最上层 -->
-    <el-dropdown class="combination-button" trigger="click">
+    <!-- 组合按钮 - 固定在页面最上层，预期管理页面不显示 -->
+    <el-dropdown v-if="route.path !== '/yqgl'" class="combination-button" trigger="click">
       <el-button type="primary" size="small" class="main-button">
         <i class="fa fa-th-large mr-1"></i>{{ currentDataSource }}
         <i class="fa fa-caret-down ml-1"></i>
