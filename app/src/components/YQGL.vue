@@ -7,7 +7,7 @@
         <div class="list-header">
           <div class="list-title">
             <span v-if="list1.length > 0" class="total-diff" :class="totalDiff1 > 0 ? 'positive' : (totalDiff1 < 0 ? 'negative' : 'zero')">
-              综合（{{ totalDiff1.toFixed(2) }}）
+              <strong>{{ totalDiff1.toFixed(2) }}</strong>
             </span>
             <span v-if="top3Stocks1.length > 0" class="top-stocks">
               {{ top3Stocks1.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
@@ -55,7 +55,7 @@
         <div class="list-header">
           <div class="list-title">
             <span v-if="list2.length > 0" class="total-diff" :class="totalDiff2 > 0 ? 'positive' : (totalDiff2 < 0 ? 'negative' : 'zero')">
-              综合（{{ totalDiff2.toFixed(2) }}）
+              <strong>{{ totalDiff2.toFixed(2) }}</strong>
             </span>
             <span v-if="top3Stocks2.length > 0" class="top-stocks">
               {{ top3Stocks2.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
@@ -102,101 +102,256 @@
       
       <!-- 第三个列表 -->
       <div class="list-container">
-        <div class="list-header">
-          <div class="list-title">
-            <span v-if="list3.length > 0" class="total-diff" :class="totalDiff3 > 0 ? 'positive' : (totalDiff3 < 0 ? 'negative' : 'zero')">
-              综合（{{ totalDiff3.toFixed(2) }}）
-            </span>
-            <span v-if="top3Stocks3.length > 0" class="top-stocks">
-              {{ top3Stocks3.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
-            </span>
+        <!-- 第三个列表的上列表 -->
+        <div class="list-section">
+          <div class="list-header">
+            <div class="list-title">
+              <span v-if="list3A.length > 0" class="total-diff" :class="totalDiff3A > 0 ? 'positive' : (totalDiff3A < 0 ? 'negative' : 'zero')">
+                <strong>{{ totalDiff3A.toFixed(2) }}</strong>
+              </span>
+              <span v-if="top3Stocks3A.length > 0" class="top-stocks">
+                {{ top3Stocks3A.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+              </span>
+            </div>
+            <button @click="showDialog('3A')" class="add-button">
+              +
+            </button>
           </div>
-          <button @click="showDialog(3)" class="add-button">
-            +
-          </button>
+          <div class="table-wrapper">
+            <table class="stock-table">
+              <thead>
+                <tr>
+                  <th>股票（{{ list3A.length }}）</th>
+                  <th>封单</th>
+                  <th>预期</th>
+                  <th>涨幅</th>
+                  <th>差值</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="list3A.length === 0">
+                  <td colspan="5" style="text-align: center; padding: 20px;">
+                    暂无股票数据
+                  </td>
+                </tr>
+                <tr v-else v-for="stock in list3A" :key="stock.code">
+                  <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                  <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
+                    {{ formatFund(stock.fund) }}
+                  </td>
+                  <td>{{ stock.expected }}</td>
+                  <td>{{ stock.actual.toFixed(2) }}%</td>
+                  <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                    {{ stock.diff.toFixed(2) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="table-wrapper">
-          <table class="stock-table">
-            <thead>
-              <tr>
-
-                <th>股票（{{ list3.length }}）</th>
-                <th>封单</th>
-                <th>预期</th>
-                <th>涨幅</th>
-                <th>差值</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="list3.length === 0">
-                <td colspan="5" style="text-align: center; padding: 40px;">
-                  暂无股票数据
-                </td>
-              </tr>
-              <tr v-else v-for="stock in list3" :key="stock.code">
-
-                <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
-                <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
-                  {{ formatFund(stock.fund) }}
-                </td>
-                <td>{{ stock.expected }}</td>
-                <td>{{ stock.actual.toFixed(2) }}%</td>
-                <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
-                  {{ stock.diff.toFixed(2) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        
+        <!-- 分隔线 -->
+        <div class="list-divider"></div>
+        
+        <!-- 第三个列表的下列表 -->
+        <div class="list-section">
+          <div class="list-header">
+            <div class="list-title">
+              <span v-if="list3B.length > 0" class="total-diff" :class="totalDiff3B > 0 ? 'positive' : (totalDiff3B < 0 ? 'negative' : 'zero')">
+                <strong>{{ totalDiff3B.toFixed(2) }}</strong>
+              </span>
+              <span v-if="top3Stocks3B.length > 0" class="top-stocks">
+                {{ top3Stocks3B.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+              </span>
+            </div>
+            <button @click="showDialog('3B')" class="add-button">
+              +
+            </button>
+          </div>
+          <div class="table-wrapper">
+            <table class="stock-table">
+              <thead>
+                <tr>
+                  <th>股票（{{ list3B.length }}）</th>
+                  <th>封单</th>
+                  <th>预期</th>
+                  <th>涨幅</th>
+                  <th>差值</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="list3B.length === 0">
+                  <td colspan="5" style="text-align: center; padding: 20px;">
+                    暂无股票数据
+                  </td>
+                </tr>
+                <tr v-else v-for="stock in list3B" :key="stock.code">
+                  <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                  <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
+                    {{ formatFund(stock.fund) }}
+                  </td>
+                  <td>{{ stock.expected }}</td>
+                  <td>{{ stock.actual.toFixed(2) }}%</td>
+                  <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                    {{ stock.diff.toFixed(2) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
       
       <!-- 第四个列表 -->
       <div class="list-container">
-        <div class="list-header">
-          <div class="list-title">
-            <span v-if="list4.length > 0" class="total-diff" :class="totalDiff4 > 0 ? 'positive' : (totalDiff4 < 0 ? 'negative' : 'zero')">
-              综合（{{ totalDiff4.toFixed(2) }}）
-            </span>
-            <span v-if="top3Stocks4.length > 0" class="top-stocks">
-              {{ top3Stocks4.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
-            </span>
+        <!-- 第四个列表的上列表 -->
+        <div class="list-section">
+          <div class="list-header">
+            <div class="list-title">
+              <span v-if="list4A.length > 0" class="total-diff" :class="totalDiff4A > 0 ? 'positive' : (totalDiff4A < 0 ? 'negative' : 'zero')">
+                <strong>{{ totalDiff4A.toFixed(2) }}</strong>
+              </span>
+              <span v-if="top3Stocks4A.length > 0" class="top-stocks">
+                {{ top3Stocks4A.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+              </span>
+            </div>
+            <button @click="showDialog('4A')" class="add-button">
+              +
+            </button>
           </div>
-          <button @click="showDialog(4)" class="add-button">
-            +
-          </button>
+          <div class="table-wrapper">
+            <table class="stock-table">
+              <thead>
+                <tr>
+                  <th>股票（{{ list4A.length }}）</th>
+                  <th>封单</th>
+                  <th>预期</th>
+                  <th>涨幅</th>
+                  <th>差值</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="list4A.length === 0">
+                  <td colspan="5" style="text-align: center; padding: 20px;">
+                    暂无股票数据
+                  </td>
+                </tr>
+                <tr v-else v-for="stock in list4A" :key="stock.code">
+                  <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                  <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
+                    {{ formatFund(stock.fund) }}
+                  </td>
+                  <td>{{ stock.expected }}</td>
+                  <td>{{ stock.actual.toFixed(2) }}%</td>
+                  <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                    {{ stock.diff.toFixed(2) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="table-wrapper">
-          <table class="stock-table">
-            <thead>
-              <tr>
-
-                <th>股票（{{ list4.length }}）</th>
-                <th>封单</th>
-                <th>预期</th>
-                <th>涨幅</th>
-                <th>差值</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="list4.length === 0">
-                <td colspan="5" style="text-align: center; padding: 40px;">
-                  暂无股票数据
-                </td>
-              </tr>
-              <tr v-else v-for="stock in list4" :key="stock.code">
-
-                <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
-                <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
-                  {{ formatFund(stock.fund) }}
-                </td>
-                <td>{{ stock.expected }}</td>
-                <td>{{ stock.actual.toFixed(2) }}%</td>
-                <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
-                  {{ stock.diff.toFixed(2) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        
+        <!-- 分隔线 -->
+        <div class="list-divider"></div>
+        
+        <!-- 第四个列表的中列表 -->
+        <div class="list-section">
+          <div class="list-header">
+            <div class="list-title">
+              <span v-if="list4B.length > 0" class="total-diff" :class="totalDiff4B > 0 ? 'positive' : (totalDiff4B < 0 ? 'negative' : 'zero')">
+                <strong>{{ totalDiff4B.toFixed(2) }}</strong>
+              </span>
+              <span v-if="top3Stocks4B.length > 0" class="top-stocks">
+                {{ top3Stocks4B.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+              </span>
+            </div>
+            <button @click="showDialog('4B')" class="add-button">
+              +
+            </button>
+          </div>
+          <div class="table-wrapper">
+            <table class="stock-table">
+              <thead>
+                <tr>
+                  <th>股票（{{ list4B.length }}）</th>
+                  <th>封单</th>
+                  <th>预期</th>
+                  <th>涨幅</th>
+                  <th>差值</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="list4B.length === 0">
+                  <td colspan="5" style="text-align: center; padding: 20px;">
+                    暂无股票数据
+                  </td>
+                </tr>
+                <tr v-else v-for="stock in list4B" :key="stock.code">
+                  <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                  <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
+                    {{ formatFund(stock.fund) }}
+                  </td>
+                  <td>{{ stock.expected }}</td>
+                  <td>{{ stock.actual.toFixed(2) }}%</td>
+                  <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                    {{ stock.diff.toFixed(2) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- 分隔线 -->
+        <div class="list-divider"></div>
+        
+        <!-- 第四个列表的下列表 -->
+        <div class="list-section">
+          <div class="list-header">
+            <div class="list-title">
+              <span v-if="list4C.length > 0" class="total-diff" :class="totalDiff4C > 0 ? 'positive' : (totalDiff4C < 0 ? 'negative' : 'zero')">
+                <strong>{{ totalDiff4C.toFixed(2) }}</strong>
+              </span>
+              <span v-if="top3Stocks4C.length > 0" class="top-stocks">
+                {{ top3Stocks4C.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+              </span>
+            </div>
+            <button @click="showDialog('4C')" class="add-button">
+              +
+            </button>
+          </div>
+          <div class="table-wrapper">
+            <table class="stock-table">
+              <thead>
+                <tr>
+                  <th>股票（{{ list4C.length }}）</th>
+                  <th>封单</th>
+                  <th>预期</th>
+                  <th>涨幅</th>
+                  <th>差值</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="list4C.length === 0">
+                  <td colspan="5" style="text-align: center; padding: 20px;">
+                    暂无股票数据
+                  </td>
+                </tr>
+                <tr v-else v-for="stock in list4C" :key="stock.code">
+                  <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                  <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
+                    {{ formatFund(stock.fund) }}
+                  </td>
+                  <td>{{ stock.expected }}</td>
+                  <td>{{ stock.actual.toFixed(2) }}%</td>
+                  <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                    {{ stock.diff.toFixed(2) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -239,16 +394,22 @@ import axios from 'axios';
 // 数据
 const list1 = ref([]);
 const list2 = ref([]);
-const list3 = ref([]); // 第三个列表
-const list4 = ref([]); // 第四个列表
+const list3A = ref([]); // 第三个列表的上列表
+const list3B = ref([]); // 第三个列表的下列表
+const list4A = ref([]); // 第四个列表的上列表
+const list4B = ref([]); // 第四个列表的中列表
+const list4C = ref([]); // 第四个列表的下列表
 const dialogVisible = ref(false);
 const currentList = ref(1);
 // 每个列表独立的输入缓存
 const inputCache = ref({
   1: '',
   2: '',
-  3: '',
-  4: ''
+  '3A': '',
+  '3B': '',
+  '4A': '',
+  '4B': '',
+  '4C': ''
 });
 // 当前对话框使用的输入值
 const dialogInputText = ref('');
@@ -262,12 +423,24 @@ const totalDiff2 = computed(() => {
   return list2.value.reduce((total, stock) => total + stock.diff, 0);
 });
 
-const totalDiff3 = computed(() => {
-  return list3.value.reduce((total, stock) => total + stock.diff, 0);
+const totalDiff3A = computed(() => {
+  return list3A.value.reduce((total, stock) => total + stock.diff, 0);
 });
 
-const totalDiff4 = computed(() => {
-  return list4.value.reduce((total, stock) => total + stock.diff, 0);
+const totalDiff3B = computed(() => {
+  return list3B.value.reduce((total, stock) => total + stock.diff, 0);
+});
+
+const totalDiff4A = computed(() => {
+  return list4A.value.reduce((total, stock) => total + stock.diff, 0);
+});
+
+const totalDiff4B = computed(() => {
+  return list4B.value.reduce((total, stock) => total + stock.diff, 0);
+});
+
+const totalDiff4C = computed(() => {
+  return list4C.value.reduce((total, stock) => total + stock.diff, 0);
 });
 
 // 计算属性：获取预期差最大的前三只股票
@@ -275,28 +448,49 @@ const top3Stocks1 = computed(() => {
   if (!list1.value || list1.value.length === 0) return [];
   return [...list1.value]
     .sort((a, b) => b.diff - a.diff)
-    .slice(0, 2);
+    .slice(0, 3);
 });
 
 const top3Stocks2 = computed(() => {
   if (!list2.value || list2.value.length === 0) return [];
   return [...list2.value]
     .sort((a, b) => b.diff - a.diff)
-    .slice(0, 2);
+    .slice(0, 3);
 });
 
-const top3Stocks3 = computed(() => {
-  if (!list3.value || list3.value.length === 0) return [];
-  return [...list3.value]
+const top3Stocks3A = computed(() => {
+  if (!list3A.value || list3A.value.length === 0) return [];
+  return [...list3A.value]
     .sort((a, b) => b.diff - a.diff)
-    .slice(0, 2);
+    .slice(0, 3);
 });
 
-const top3Stocks4 = computed(() => {
-  if (!list4.value || list4.value.length === 0) return [];
-  return [...list4.value]
+const top3Stocks3B = computed(() => {
+  if (!list3B.value || list3B.value.length === 0) return [];
+  return [...list3B.value]
     .sort((a, b) => b.diff - a.diff)
-    .slice(0, 2);
+    .slice(0, 3);
+});
+
+const top3Stocks4A = computed(() => {
+  if (!list4A.value || list4A.value.length === 0) return [];
+  return [...list4A.value]
+    .sort((a, b) => b.diff - a.diff)
+    .slice(0, 3);
+});
+
+const top3Stocks4B = computed(() => {
+  if (!list4B.value || list4B.value.length === 0) return [];
+  return [...list4B.value]
+    .sort((a, b) => b.diff - a.diff)
+    .slice(0, 3);
+});
+
+const top3Stocks4C = computed(() => {
+  if (!list4C.value || list4C.value.length === 0) return [];
+  return [...list4C.value]
+    .sort((a, b) => b.diff - a.diff)
+    .slice(0, 3);
 });
 
 // 显示对话框
@@ -322,9 +516,32 @@ const handleConfirm = () => {
   }
   
   // 获取目标列表
-  const targetList = currentList.value === 1 ? list1 : 
-                    currentList.value === 2 ? list2 : 
-                    currentList.value === 3 ? list3 : list4;
+  let targetList;
+  switch (currentList.value) {
+    case 1:
+      targetList = list1;
+      break;
+    case 2:
+      targetList = list2;
+      break;
+    case '3A':
+      targetList = list3A;
+      break;
+    case '3B':
+      targetList = list3B;
+      break;
+    case '4A':
+      targetList = list4A;
+      break;
+    case '4B':
+      targetList = list4B;
+      break;
+    case '4C':
+      targetList = list4C;
+      break;
+    default:
+      targetList = list1;
+  }
   
   // 清空当前列表
   targetList.value = [];
@@ -491,8 +708,11 @@ const updateStockData = async () => {
     const allStocks = [
       ...(list1.value || []),
       ...(list2.value || []),
-      ...(list3.value || []),
-      ...(list4.value || [])
+      ...(list3A.value || []),
+      ...(list3B.value || []),
+      ...(list4A.value || []),
+      ...(list4B.value || []),
+      ...(list4C.value || [])
     ];
     
     if (allStocks.length === 0) {
@@ -522,8 +742,11 @@ const updateStockData = async () => {
         // 找到股票在原列表中的索引并更新
         const stockIndex1 = list1.value.findIndex(s => s.code === stock.code);
         const stockIndex2 = list2.value.findIndex(s => s.code === stock.code);
-        const stockIndex3 = list3.value.findIndex(s => s.code === stock.code);
-        const stockIndex4 = list4.value.findIndex(s => s.code === stock.code);
+        const stockIndex3A = list3A.value.findIndex(s => s.code === stock.code);
+        const stockIndex3B = list3B.value.findIndex(s => s.code === stock.code);
+        const stockIndex4A = list4A.value.findIndex(s => s.code === stock.code);
+        const stockIndex4B = list4B.value.findIndex(s => s.code === stock.code);
+        const stockIndex4C = list4C.value.findIndex(s => s.code === stock.code);
         
         if (stockIndex1 !== -1) {
           list1.value[stockIndex1] = {...list1.value[stockIndex1], name, actual, diff, fund, fundType};
@@ -531,11 +754,20 @@ const updateStockData = async () => {
         if (stockIndex2 !== -1) {
           list2.value[stockIndex2] = {...list2.value[stockIndex2], name, actual, diff, fund, fundType};
         }
-        if (stockIndex3 !== -1) {
-          list3.value[stockIndex3] = {...list3.value[stockIndex3], name, actual, diff, fund, fundType};
+        if (stockIndex3A !== -1) {
+          list3A.value[stockIndex3A] = {...list3A.value[stockIndex3A], name, actual, diff, fund, fundType};
         }
-        if (stockIndex4 !== -1) {
-          list4.value[stockIndex4] = {...list4.value[stockIndex4], name, actual, diff, fund, fundType};
+        if (stockIndex3B !== -1) {
+          list3B.value[stockIndex3B] = {...list3B.value[stockIndex3B], name, actual, diff, fund, fundType};
+        }
+        if (stockIndex4A !== -1) {
+          list4A.value[stockIndex4A] = {...list4A.value[stockIndex4A], name, actual, diff, fund, fundType};
+        }
+        if (stockIndex4B !== -1) {
+          list4B.value[stockIndex4B] = {...list4B.value[stockIndex4B], name, actual, diff, fund, fundType};
+        }
+        if (stockIndex4C !== -1) {
+          list4C.value[stockIndex4C] = {...list4C.value[stockIndex4C], name, actual, diff, fund, fundType};
         }
         
         console.log(`股票 ${name} 更新成功，实际涨幅：${actual}`);
@@ -550,8 +782,11 @@ const updateStockData = async () => {
   // 更新完成后，按照差值倒序排序所有列表
   list1.value.sort((a, b) => b.diff - a.diff);
   list2.value.sort((a, b) => b.diff - a.diff);
-  list3.value.sort((a, b) => b.diff - a.diff);
-  list4.value.sort((a, b) => b.diff - a.diff);
+  list3A.value.sort((a, b) => b.diff - a.diff);
+  list3B.value.sort((a, b) => b.diff - a.diff);
+  list4A.value.sort((a, b) => b.diff - a.diff);
+  list4B.value.sort((a, b) => b.diff - a.diff);
+  list4C.value.sort((a, b) => b.diff - a.diff);
   
   console.log('股票数据更新完成，列表已重新排序');
   } catch (error) {
@@ -676,6 +911,21 @@ h1 {
   border-radius: 6px;
   padding: 12px;
   min-height: 0;
+}
+
+/* 列表分段 */
+.list-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 列表分隔线 */
+.list-divider {
+  height: 1px;
+  background-color: #333;
+  margin: 8px 0;
 }
 
 .list-header {
