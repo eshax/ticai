@@ -49,8 +49,10 @@
                   {{ formatFund(stock.fund) }}
                 </td>
                 <td>{{ stock.expected }}</td>
-                <td>{{ stock.actual.toFixed(2) }}%</td>
-                <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
+                  {{ stock.actual.toFixed(2) }}%
+                </td>
+                <td :class="Math.abs(stock.diff) <= 3 ? 'zero' : (stock.diff > 0 ? 'positive' : 'negative')">
                   {{ stock.diff.toFixed(2) }}
                 </td>
               </tr>
@@ -107,8 +109,10 @@
                   {{ formatFund(stock.fund) }}
                 </td>
                 <td>{{ stock.expected }}</td>
-                <td>{{ stock.actual.toFixed(2) }}%</td>
-                <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
+                  {{ stock.actual.toFixed(2) }}%
+                </td>
+                <td :class="Math.abs(stock.diff) <= 3 ? 'zero' : (stock.diff > 0 ? 'positive' : 'negative')">
                   {{ stock.diff.toFixed(2) }}
                 </td>
               </tr>
@@ -166,7 +170,9 @@
                     {{ formatFund(stock.fund) }}
                   </td>
                   <td>{{ stock.expected }}</td>
-                  <td>{{ stock.actual.toFixed(2) }}%</td>
+                  <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
+                  {{ stock.actual.toFixed(2) }}%
+                </td>
                   <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
                     {{ stock.diff.toFixed(2) }}
                   </td>
@@ -226,7 +232,9 @@
                     {{ formatFund(stock.fund) }}
                   </td>
                   <td>{{ stock.expected }}</td>
-                  <td>{{ stock.actual.toFixed(2) }}%</td>
+                  <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
+                  {{ stock.actual.toFixed(2) }}%
+                </td>
                   <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
                     {{ stock.diff.toFixed(2) }}
                   </td>
@@ -286,7 +294,9 @@
                     {{ formatFund(stock.fund) }}
                   </td>
                   <td>{{ stock.expected }}</td>
-                  <td>{{ stock.actual.toFixed(2) }}%</td>
+                  <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
+                  {{ stock.actual.toFixed(2) }}%
+                </td>
                   <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
                     {{ stock.diff.toFixed(2) }}
                   </td>
@@ -346,7 +356,9 @@
                     {{ formatFund(stock.fund) }}
                   </td>
                   <td>{{ stock.expected }}</td>
-                  <td>{{ stock.actual.toFixed(2) }}%</td>
+                  <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
+                  {{ stock.actual.toFixed(2) }}%
+                </td>
                   <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
                     {{ stock.diff.toFixed(2) }}
                   </td>
@@ -406,7 +418,9 @@
                     {{ formatFund(stock.fund) }}
                   </td>
                   <td>{{ stock.expected }}</td>
-                  <td>{{ stock.actual.toFixed(2) }}%</td>
+                  <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
+                  {{ stock.actual.toFixed(2) }}%
+                </td>
                   <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
                     {{ stock.diff.toFixed(2) }}
                   </td>
