@@ -3,7 +3,7 @@
     
     <div class="lists-container">
       <!-- 第一个列表 -->
-      <div class="list-container">
+      <div class="list-container list-container-1">
         <div class="list-header">
           <div class="list-title">
             <span v-if="list1.length > 0" class="total-diff" :class="totalDiff1 > 0 ? 'positive' : (totalDiff1 < 0 ? 'negative' : 'zero')">
@@ -62,7 +62,7 @@
       </div>
       
       <!-- 第二个列表 -->
-      <div class="list-container">
+      <div class="list-container list-container-2">
         <div class="list-header">
           <div class="list-title">
             <span v-if="list2.length > 0" class="total-diff" :class="totalDiff2 > 0 ? 'positive' : (totalDiff2 < 0 ? 'negative' : 'zero')">
@@ -122,7 +122,7 @@
       </div>
       
       <!-- 第三个列表 -->
-      <div class="list-container">
+      <div class="list-container list-container-3">
         <!-- 第三个列表的上列表 -->
         <div class="list-section">
           <div class="list-header">
@@ -246,7 +246,7 @@
       </div>
       
       <!-- 第四个列表 -->
-      <div class="list-container">
+      <div class="list-container list-container-4">
         <!-- 第四个列表的上列表 -->
         <div class="list-section">
           <div class="list-header">
@@ -1303,5 +1303,26 @@ h1 {
 
 .confirm-button:hover {
   background-color: #66b1ff;
+}
+
+/* 响应式布局 - 屏幕宽度小于600px时 */
+@media (max-width: 600px) {
+  .lists-container {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+  
+  /* 只显示第一个列表容器 */
+  .list-container-2,
+  .list-container-3,
+  .list-container-4 {
+    display: none;
+  }
+  
+  /* 第一个列表容器宽度自适应 */
+  .list-container-1 {
+    min-width: auto;
+    width: 100%;
+  }
 }
 </style>
