@@ -10,7 +10,7 @@
               <strong>{{ totalDiff1.toFixed(2) }}</strong>
             </span>
             <span v-if="top3Stocks1.length > 0" class="top-stocks">
-              {{ top3Stocks1.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+              {{ top3Stocks1.map(stock => stock.name).join(' , ') }}
             </span>
           </div>
           <button @click="showDialog(1)" class="add-button">
@@ -22,10 +22,19 @@
             <thead>
               <tr>
                 <th>股票（{{ list1.length }}）</th>
-                <th>封单</th>
+                <th @click="handleSort(1, 'fund')" style="cursor: pointer;">
+                  封单
+                  <span v-if="sortStates[1].field === 'fund'" class="sort-indicator" :class="sortStates[1].order"></span>
+                </th>
                 <th>预期</th>
-                <th>涨幅</th>
-                <th>差值</th>
+                <th @click="handleSort(1, 'actual')" style="cursor: pointer;">
+                  涨幅
+                  <span v-if="sortStates[1].field === 'actual'" class="sort-indicator" :class="sortStates[1].order"></span>
+                </th>
+                <th @click="handleSort(1, 'diff')" style="cursor: pointer;">
+                  差值
+                  <span v-if="sortStates[1].field === 'diff'" class="sort-indicator" :class="sortStates[1].order"></span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -58,7 +67,7 @@
               <strong>{{ totalDiff2.toFixed(2) }}</strong>
             </span>
             <span v-if="top3Stocks2.length > 0" class="top-stocks">
-              {{ top3Stocks2.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+              {{ top3Stocks2.map(stock => stock.name).join(' , ') }}
             </span>
           </div>
           <button @click="showDialog(2)" class="add-button">
@@ -69,12 +78,20 @@
           <table class="stock-table">
             <thead>
               <tr>
-
                 <th>股票（{{ list2.length }}）</th>
-                <th>封单</th>
+                <th @click="handleSort(2, 'fund')" style="cursor: pointer;">
+                  封单
+                  <span v-if="sortStates[2].field === 'fund'" class="sort-indicator" :class="sortStates[2].order"></span>
+                </th>
                 <th>预期</th>
-                <th>涨幅</th>
-                <th>差值</th>
+                <th @click="handleSort(2, 'actual')" style="cursor: pointer;">
+                  涨幅
+                  <span v-if="sortStates[2].field === 'actual'" class="sort-indicator" :class="sortStates[2].order"></span>
+                </th>
+                <th @click="handleSort(2, 'diff')" style="cursor: pointer;">
+                  差值
+                  <span v-if="sortStates[2].field === 'diff'" class="sort-indicator" :class="sortStates[2].order"></span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -110,7 +127,7 @@
                 <strong>{{ totalDiff3A.toFixed(2) }}</strong>
               </span>
               <span v-if="top3Stocks3A.length > 0" class="top-stocks">
-                {{ top3Stocks3A.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+                {{ top3Stocks3A.map(stock => stock.name).join(' , ') }}
               </span>
             </div>
             <button @click="showDialog('3A')" class="add-button">
@@ -122,10 +139,19 @@
               <thead>
                 <tr>
                   <th>股票（{{ list3A.length }}）</th>
-                  <th>封单</th>
+                  <th @click="handleSort('3A', 'fund')" style="cursor: pointer;">
+                    封单
+                    <span v-if="sortStates['3A'].field === 'fund'" class="sort-indicator" :class="sortStates['3A'].order"></span>
+                  </th>
                   <th>预期</th>
-                  <th>涨幅</th>
-                  <th>差值</th>
+                  <th @click="handleSort('3A', 'actual')" style="cursor: pointer;">
+                    涨幅
+                    <span v-if="sortStates['3A'].field === 'actual'" class="sort-indicator" :class="sortStates['3A'].order"></span>
+                  </th>
+                  <th @click="handleSort('3A', 'diff')" style="cursor: pointer;">
+                    差值
+                    <span v-if="sortStates['3A'].field === 'diff'" class="sort-indicator" :class="sortStates['3A'].order"></span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -161,7 +187,7 @@
                 <strong>{{ totalDiff3B.toFixed(2) }}</strong>
               </span>
               <span v-if="top3Stocks3B.length > 0" class="top-stocks">
-                {{ top3Stocks3B.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+                {{ top3Stocks3B.map(stock => stock.name).join(' , ') }}
               </span>
             </div>
             <button @click="showDialog('3B')" class="add-button">
@@ -173,10 +199,19 @@
               <thead>
                 <tr>
                   <th>股票（{{ list3B.length }}）</th>
-                  <th>封单</th>
+                  <th @click="handleSort('3B', 'fund')" style="cursor: pointer;">
+                    封单
+                    <span v-if="sortStates['3B'].field === 'fund'" class="sort-indicator" :class="sortStates['3B'].order"></span>
+                  </th>
                   <th>预期</th>
-                  <th>涨幅</th>
-                  <th>差值</th>
+                  <th @click="handleSort('3B', 'actual')" style="cursor: pointer;">
+                    涨幅
+                    <span v-if="sortStates['3B'].field === 'actual'" class="sort-indicator" :class="sortStates['3B'].order"></span>
+                  </th>
+                  <th @click="handleSort('3B', 'diff')" style="cursor: pointer;">
+                    差值
+                    <span v-if="sortStates['3B'].field === 'diff'" class="sort-indicator" :class="sortStates['3B'].order"></span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -212,7 +247,7 @@
                 <strong>{{ totalDiff4A.toFixed(2) }}</strong>
               </span>
               <span v-if="top3Stocks4A.length > 0" class="top-stocks">
-                {{ top3Stocks4A.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+                {{ top3Stocks4A.map(stock => stock.name).join(' , ') }}
               </span>
             </div>
             <button @click="showDialog('4A')" class="add-button">
@@ -224,10 +259,19 @@
               <thead>
                 <tr>
                   <th>股票（{{ list4A.length }}）</th>
-                  <th>封单</th>
+                  <th @click="handleSort('4A', 'fund')" style="cursor: pointer;">
+                    封单
+                    <span v-if="sortStates['4A'].field === 'fund'" class="sort-indicator" :class="sortStates['4A'].order"></span>
+                  </th>
                   <th>预期</th>
-                  <th>涨幅</th>
-                  <th>差值</th>
+                  <th @click="handleSort('4A', 'actual')" style="cursor: pointer;">
+                    涨幅
+                    <span v-if="sortStates['4A'].field === 'actual'" class="sort-indicator" :class="sortStates['4A'].order"></span>
+                  </th>
+                  <th @click="handleSort('4A', 'diff')" style="cursor: pointer;">
+                    差值
+                    <span v-if="sortStates['4A'].field === 'diff'" class="sort-indicator" :class="sortStates['4A'].order"></span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -263,7 +307,7 @@
                 <strong>{{ totalDiff4B.toFixed(2) }}</strong>
               </span>
               <span v-if="top3Stocks4B.length > 0" class="top-stocks">
-                {{ top3Stocks4B.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+                {{ top3Stocks4B.map(stock => stock.name).join(' , ') }}
               </span>
             </div>
             <button @click="showDialog('4B')" class="add-button">
@@ -275,10 +319,19 @@
               <thead>
                 <tr>
                   <th>股票（{{ list4B.length }}）</th>
-                  <th>封单</th>
+                  <th @click="handleSort('4B', 'fund')" style="cursor: pointer;">
+                    封单
+                    <span v-if="sortStates['4B'].field === 'fund'" class="sort-indicator" :class="sortStates['4B'].order"></span>
+                  </th>
                   <th>预期</th>
-                  <th>涨幅</th>
-                  <th>差值</th>
+                  <th @click="handleSort('4B', 'actual')" style="cursor: pointer;">
+                    涨幅
+                    <span v-if="sortStates['4B'].field === 'actual'" class="sort-indicator" :class="sortStates['4B'].order"></span>
+                  </th>
+                  <th @click="handleSort('4B', 'diff')" style="cursor: pointer;">
+                    差值
+                    <span v-if="sortStates['4B'].field === 'diff'" class="sort-indicator" :class="sortStates['4B'].order"></span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -314,7 +367,7 @@
                 <strong>{{ totalDiff4C.toFixed(2) }}</strong>
               </span>
               <span v-if="top3Stocks4C.length > 0" class="top-stocks">
-                {{ top3Stocks4C.map(stock => `${stock.name}（${stock.diff.toFixed(2)}）`).join(' ') }}
+                {{ top3Stocks4C.map(stock => stock.name).join(' , ') }}
               </span>
             </div>
             <button @click="showDialog('4C')" class="add-button">
@@ -326,10 +379,19 @@
               <thead>
                 <tr>
                   <th>股票（{{ list4C.length }}）</th>
-                  <th>封单</th>
+                  <th @click="handleSort('4C', 'fund')" style="cursor: pointer;">
+                    封单
+                    <span v-if="sortStates['4C'].field === 'fund'" class="sort-indicator" :class="sortStates['4C'].order"></span>
+                  </th>
                   <th>预期</th>
-                  <th>涨幅</th>
-                  <th>差值</th>
+                  <th @click="handleSort('4C', 'actual')" style="cursor: pointer;">
+                    涨幅
+                    <span v-if="sortStates['4C'].field === 'actual'" class="sort-indicator" :class="sortStates['4C'].order"></span>
+                  </th>
+                  <th @click="handleSort('4C', 'diff')" style="cursor: pointer;">
+                    差值
+                    <span v-if="sortStates['4C'].field === 'diff'" class="sort-indicator" :class="sortStates['4C'].order"></span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -399,6 +461,18 @@ const list3B = ref([]); // 第三个列表的下列表
 const list4A = ref([]); // 第四个列表的上列表
 const list4B = ref([]); // 第四个列表的中列表
 const list4C = ref([]); // 第四个列表的下列表
+
+// 排序状态管理
+const sortStates = ref({
+  1: { field: 'diff', order: 'desc' },
+  2: { field: 'diff', order: 'desc' },
+  '3A': { field: 'diff', order: 'desc' },
+  '3B': { field: 'diff', order: 'desc' },
+  '4A': { field: 'diff', order: 'desc' },
+  '4B': { field: 'diff', order: 'desc' },
+  '4C': { field: 'diff', order: 'desc' }
+});
+
 const dialogVisible = ref(false);
 const currentList = ref(1);
 // 每个列表独立的输入缓存
@@ -502,6 +576,41 @@ const showDialog = (listNum) => {
   dialogVisible.value = true;
 };
 
+// 排序处理函数
+const handleSort = (listNum, field) => {
+  const sortState = sortStates.value[listNum];
+  const targetList = getList(listNum);
+  
+  // 如果点击的是当前排序字段，则切换排序顺序
+  if (sortState.field === field) {
+    // 从正序切换到倒序，或从倒序切换到正序
+    sortState.order = sortState.order === 'asc' ? 'desc' : 'asc';
+  } else {
+    // 如果点击的是新字段，默认使用倒序
+    sortState.field = field;
+    sortState.order = 'desc';
+  }
+  
+  // 根据排序状态对列表进行排序
+  targetList.value.sort((a, b) => {
+    return sortState.order === 'asc' ? a[field] - b[field] : b[field] - a[field];
+  });
+};
+
+// 获取列表的辅助函数
+const getList = (listNum) => {
+  switch (listNum) {
+    case 1: return list1;
+    case 2: return list2;
+    case '3A': return list3A;
+    case '3B': return list3B;
+    case '4A': return list4A;
+    case '4B': return list4B;
+    case '4C': return list4C;
+    default: return list1;
+  }
+};
+
 // 处理确认按钮
 const handleConfirm = () => {
   if (!dialogInputText.value.trim()) {
@@ -561,6 +670,11 @@ const handleConfirm = () => {
   // 按照差值倒序排序
   targetList.value.sort((a, b) => b.diff - a.diff);
   
+  // 更新排序状态为差值倒序
+  const sortState = sortStates.value[currentList.value];
+  sortState.field = 'diff';
+  sortState.order = 'desc';
+  
   // 添加后立即获取实时数据
   updateStockData();
   
@@ -609,7 +723,9 @@ const addMarketPrefix = (code) => {
 
 // 格式化封单额显示
 const formatFund = (fund) => {
-  if (!fund || fund <= 0) return '-';
+  if (!fund || fund == 0) return '-';
+
+  if (fund < 0) fund = fund * -1.0;
   
   // 一亿等于10000万
   if (fund < 100000000) {
@@ -683,7 +799,7 @@ const fetchBatchStockData = async (stocks) => {
               fund = buy1Price * buy1Volume * 100;
               fundType = 'buy';
             } else if (actual <= -9.9) { // 跌停 - 卖出封单
-              fund = sell1Price * sell1Volume * 100;
+              fund = sell1Price * sell1Volume * 100 * -1.0;
               fundType = 'sell';
             }
             
@@ -779,16 +895,26 @@ const updateStockData = async () => {
     }
   });
   
-  // 更新完成后，按照差值倒序排序所有列表
-  list1.value.sort((a, b) => b.diff - a.diff);
-  list2.value.sort((a, b) => b.diff - a.diff);
-  list3A.value.sort((a, b) => b.diff - a.diff);
-  list3B.value.sort((a, b) => b.diff - a.diff);
-  list4A.value.sort((a, b) => b.diff - a.diff);
-  list4B.value.sort((a, b) => b.diff - a.diff);
-  list4C.value.sort((a, b) => b.diff - a.diff);
+  // 更新完成后，根据用户当前的排序状态重新排序每个列表
+  const applySort = (listNum, list) => {
+    const sortState = sortStates.value[listNum];
+    if (sortState.field && sortState.order) {
+      list.value.sort((a, b) => {
+        return sortState.order === 'asc' ? a[sortState.field] - b[sortState.field] : b[sortState.field] - a[sortState.field];
+      });
+    }
+  };
   
-  console.log('股票数据更新完成，列表已重新排序');
+  // 对每个列表应用排序
+  applySort(1, list1);
+  applySort(2, list2);
+  applySort('3A', list3A);
+  applySort('3B', list3B);
+  applySort('4A', list4A);
+  applySort('4B', list4B);
+  applySort('4C', list4C);
+  
+  console.log('股票数据更新完成，已应用当前排序状态');
   } catch (error) {
     console.error('更新股票数据时发生错误:', error);
   }
@@ -978,6 +1104,27 @@ h1 {
   min-height: 0;
 }
 
+/* 排序指示器样式 */
+.sort-indicator {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.sort-indicator.asc {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid #409eff;
+}
+
+.sort-indicator.desc {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #409eff;
+}
+
 /* 自定义滚动条样式 */
 .table-wrapper::-webkit-scrollbar {
   width: 8px;
@@ -1004,7 +1151,7 @@ h1 {
 
 .stock-table th,
 .stock-table td {
-  padding: 12px;
+  padding: 8px;
   text-align: center;
   border-bottom: 1px solid #333;
   font-size: 12px;
