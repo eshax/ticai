@@ -173,7 +173,7 @@
                   <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
                   {{ stock.actual.toFixed(2) }}%
                 </td>
-                  <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                  <td :class="Math.abs(stock.diff) <= 3 ? 'zero' : (stock.diff > 0 ? 'positive' : 'negative')">
                     {{ stock.diff.toFixed(2) }}
                   </td>
                 </tr>
@@ -235,7 +235,7 @@
                   <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
                   {{ stock.actual.toFixed(2) }}%
                 </td>
-                  <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                  <td :class="Math.abs(stock.diff) <= 3 ? 'zero' : (stock.diff > 0 ? 'positive' : 'negative')">
                     {{ stock.diff.toFixed(2) }}
                   </td>
                 </tr>
@@ -297,7 +297,7 @@
                   <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
                   {{ stock.actual.toFixed(2) }}%
                 </td>
-                  <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                  <td :class="Math.abs(stock.diff) <= 3 ? 'zero' : (stock.diff > 0 ? 'positive' : 'negative')">
                     {{ stock.diff.toFixed(2) }}
                   </td>
                 </tr>
@@ -359,7 +359,7 @@
                   <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
                   {{ stock.actual.toFixed(2) }}%
                 </td>
-                  <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                  <td :class="Math.abs(stock.diff) <= 3 ? 'zero' : (stock.diff > 0 ? 'positive' : 'negative')">
                     {{ stock.diff.toFixed(2) }}
                   </td>
                 </tr>
@@ -421,7 +421,7 @@
                   <td :class="stock.actual > 0 ? 'positive' : (stock.actual < 0 ? 'negative' : 'zero')">
                   {{ stock.actual.toFixed(2) }}%
                 </td>
-                  <td :class="stock.diff > 0 ? 'positive' : (stock.diff < 0 ? 'negative' : 'zero')">
+                  <td :class="Math.abs(stock.diff) <= 3 ? 'zero' : (stock.diff > 0 ? 'positive' : 'negative')">
                     {{ stock.diff.toFixed(2) }}
                   </td>
                 </tr>
