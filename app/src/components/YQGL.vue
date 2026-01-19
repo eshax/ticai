@@ -795,10 +795,10 @@ const fetchBatchStockData = async (stocks) => {
             let fund = 0;
             let fundType = ''; // 'buy' 或 'sell'
             // 判断是涨停还是跌停
-            if (actual >= 9.9) { // 涨停 - 买入封单
+            if (sell1Price == 0) { // 涨停 - 买入封单
               fund = buy1Price * buy1Volume * 100;
               fundType = 'buy';
-            } else if (actual <= -9.9) { // 跌停 - 卖出封单
+            } else if (buy1Price == 0) { // 跌停 - 卖出封单
               fund = sell1Price * sell1Volume * 100 * -1.0;
               fundType = 'sell';
             }
