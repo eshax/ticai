@@ -800,6 +800,7 @@ const fetchBatchStockData = async (stocks) => {
           const buy1Volume = parseFloat(values[10]);
           const sell1Price = parseFloat(values[19]);
           const sell1Volume = parseFloat(values[20]);
+          const openPrice = parseFloat(values[5]);
           
           if (!isNaN(prevClose) && !isNaN(current)) {
             // 计算实际涨幅
@@ -813,6 +814,12 @@ const fetchBatchStockData = async (stocks) => {
               fund = buy1Price * buy1Volume * 100;
               fundType = 'buy';
             } else if (buy1Price == 0) { // 跌停 - 卖出封单
+              fund = sell1Price * sell1Volume * 100 * -1.0;
+              fundType = 'sell';
+            } else if (openPrice == 0 && buy1Price == parseFloat((prevClose * 1.1).toFixed(2))){
+              fund = buy1Price * buy1Volume * 100;
+              fundType = 'buy';
+            } else if (openPrice == 0 && sell1Price == parseFloat((prevClose * 0.9).toFixed(2))){
               fund = sell1Price * sell1Volume * 100 * -1.0;
               fundType = 'sell';
             }
