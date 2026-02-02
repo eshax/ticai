@@ -1,6 +1,7 @@
 const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
   transpileDependencies: true,
+  productionSourceMap: false,
   devServer: {
     // 移除代理配置，因为现在使用独立的后端转发服务
     // 后端转发服务运行在 http://localhost:3001
