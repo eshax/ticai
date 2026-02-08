@@ -154,6 +154,7 @@ export const formatStockData = (stock, isDown = false) => {
     m_days_n_boards_boards: stock.m_days_n_boards_boards || 0,
     m_days_n_boards_days: stock.m_days_n_boards_days || 0,
     first_limit_up: formatLimitTime(stock.first_limit_up || stock.first_limit_down, isDown),
+    last_limit_up: formatLimitTime(stock.last_limit_up || stock.last_limit_down, isDown),
     limitUpBoardsText: getLimitDisplayText(stock, isDown) || '-',
     boardIndicator: boardIndicator,
     primaryTheme: allThemes[0] || '无题材',

@@ -88,7 +88,7 @@
                     @mouseleave="hoveredStock = null"
                     :class="{ 'highlight-row': hoveredStock === stock.symbol }">
                   <td>{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
-                  <td>{{ stock.first_limit_up || '-' }}</td>
+                  <td>{{ formatLimitTimeRange(stock.first_limit_up, stock.last_limit_up) }}</td>
                   <td :class="stock.change_percent > 0 ? 'positive' : (stock.change_percent < 0 ? 'negative' : 'zero')">
                     {{ (stock.change_percent * 100).toFixed(2) }}%
                   </td>
@@ -129,7 +129,7 @@
                     @mouseleave="hoveredStock = null"
                     :class="{ 'highlight-row': hoveredStock === stock.symbol }">
                   <td>{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
-                  <td>{{ stock.first_limit_up || '-' }}</td>
+                  <td>{{ formatLimitTimeRange(stock.first_limit_up, stock.last_limit_up) }}</td>
                   <td :class="stock.change_percent > 0 ? 'positive' : (stock.change_percent < 0 ? 'negative' : 'zero')">
                     {{ (stock.change_percent * 100).toFixed(2) }}%
                   </td>
@@ -170,7 +170,7 @@
                     @mouseleave="hoveredStock = null"
                     :class="{ 'highlight-row': hoveredStock === stock.symbol }">
                   <td>{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
-                  <td>{{ stock.first_limit_up || '-' }}</td>
+                  <td>{{ formatLimitTimeRange(stock.first_limit_up, stock.last_limit_up) }}</td>
                   <td :class="stock.change_percent > 0 ? 'positive' : (stock.change_percent < 0 ? 'negative' : 'zero')">
                     {{ (stock.change_percent * 100).toFixed(2) }}%
                   </td>
@@ -211,7 +211,7 @@
                     @mouseleave="hoveredStock = null"
                     :class="{ 'highlight-row': hoveredStock === stock.symbol }">
                   <td>{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
-                  <td>{{ stock.first_limit_up || '-' }}</td>
+                  <td>{{ formatLimitTimeRange(stock.first_limit_up, stock.last_limit_up) }}</td>
                   <td :class="stock.change_percent > 0 ? 'positive' : (stock.change_percent < 0 ? 'negative' : 'zero')">
                     {{ (stock.change_percent * 100).toFixed(2) }}%
                   </td>
@@ -246,6 +246,28 @@ const formatDate = (date) => {
   if (!date) return '';
   const d = new Date(date);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+const formatLimitTimeRange = (firstTime, lastTime) => {
+  const formatTime = (time) => {
+    if (!time || time === '-') return '-';
+    const parts = time.split(':');
+    return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : time;
+  };
+
+  const formattedFirst = formatTime(firstTime);
+  const formattedLast = formatTime(lastTime);
+
+  if (formattedFirst === '-') {
+    return '-';
+  }
+  if (formattedLast === '-') {
+    return formattedFirst;
+  }
+  if (formattedFirst === formattedLast) {
+    return formattedFirst;
+  }
+  return `${formattedFirst} - ${formattedLast}`;
 };
 
 const canNavigateDate = (offset) => {
@@ -601,19 +623,19 @@ onMounted(() => {
 
 .stock-table th:nth-child(1),
 .stock-table td:nth-child(1) {
-  min-width: 200px;
+  width: 120px;
   white-space: nowrap;
 }
 
 .stock-table th:nth-child(2),
 .stock-table td:nth-child(2) {
-  width: 80px;
-  text-align: center;
+  width: 90px;
+  text-align: left;
 }
 
 .stock-table th:nth-child(3),
 .stock-table td:nth-child(3) {
-  width: 80px;
+  width: 60px;
   text-align: right;
 }
 
