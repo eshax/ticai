@@ -150,6 +150,7 @@ export const formatStockData = (stock, isDown = false) => {
     change_percent: stock.change_percent,
     limit_up_days: stock.limit_up_days || 0,
     limit_down_days: stock.limit_down_days || 0,
+    yesterday_limit_up_days: stock.yesterday_limit_up_days || 0,
     new_stock_break_limit_up: stock.new_stock_break_limit_up || 0,
     m_days_n_boards_boards: stock.m_days_n_boards_boards || 0,
     m_days_n_boards_days: stock.m_days_n_boards_days || 0,
@@ -164,6 +165,7 @@ export const formatStockData = (stock, isDown = false) => {
     hasMultiplePlates: hasMultiplePlates,
     plateCount: plateCount,
     breakLimitUpTimes: stock.break_limit_up_times || stock.break_limit_down_times || 0,
+    isBrokenData: isDown,
     updateTime: new Date().toISOString()
   };
 };

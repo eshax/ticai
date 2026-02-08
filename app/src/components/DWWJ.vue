@@ -87,7 +87,7 @@
                     @mouseenter="handleStockHover(stock.symbol)"
                     @mouseleave="hoveredStock = null"
                     :class="{ 'highlight-row': hoveredStock === stock.symbol }">
-                  <td>{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
+                  <td :class="{ 'limit-up-name': !stock.isBrokenData }">{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
                   <td>{{ formatLimitTimeRange(stock.first_limit_up, stock.last_limit_up) }}</td>
                   <td :class="stock.change_percent > 0 ? 'positive' : (stock.change_percent < 0 ? 'negative' : 'zero')">
                     {{ (stock.change_percent * 100).toFixed(2) }}%
@@ -128,7 +128,7 @@
                     @mouseenter="handleStockHover(stock.symbol)"
                     @mouseleave="hoveredStock = null"
                     :class="{ 'highlight-row': hoveredStock === stock.symbol }">
-                  <td>{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
+                  <td :class="{ 'limit-up-name': !stock.isBrokenData }">{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
                   <td>{{ formatLimitTimeRange(stock.first_limit_up, stock.last_limit_up) }}</td>
                   <td :class="stock.change_percent > 0 ? 'positive' : (stock.change_percent < 0 ? 'negative' : 'zero')">
                     {{ (stock.change_percent * 100).toFixed(2) }}%
@@ -169,7 +169,7 @@
                     @mouseenter="handleStockHover(stock.symbol)"
                     @mouseleave="hoveredStock = null"
                     :class="{ 'highlight-row': hoveredStock === stock.symbol }">
-                  <td>{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
+                  <td :class="{ 'limit-up-name': !stock.isBrokenData }">{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
                   <td>{{ formatLimitTimeRange(stock.first_limit_up, stock.last_limit_up) }}</td>
                   <td :class="stock.change_percent > 0 ? 'positive' : (stock.change_percent < 0 ? 'negative' : 'zero')">
                     {{ (stock.change_percent * 100).toFixed(2) }}%
@@ -210,7 +210,7 @@
                     @mouseenter="handleStockHover(stock.symbol)"
                     @mouseleave="hoveredStock = null"
                     :class="{ 'highlight-row': hoveredStock === stock.symbol }">
-                  <td>{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
+                  <td :class="{ 'limit-up-name': !stock.isBrokenData }">{{ formatStockCode(stock.symbol) }} - {{ stock.stock_chi_name }}</td>
                   <td>{{ formatLimitTimeRange(stock.first_limit_up, stock.last_limit_up) }}</td>
                   <td :class="stock.change_percent > 0 ? 'positive' : (stock.change_percent < 0 ? 'negative' : 'zero')">
                     {{ (stock.change_percent * 100).toFixed(2) }}%
@@ -373,25 +373,37 @@ const fetchStockData = async () => {
     
     for (let i = 0; i < 4; i++) {
       try {
-        const stockPoolData = await fetchStockPoolData('limit_up', dates[i]);
+        let combinedData = [];
         
-        // 先格式化数据，然后筛选板数
-        const formattedData = stockPoolData
+        const limitUpData = await fetchStockPoolData('limit_up', dates[i]);
+        const formattedLimitUpData = limitUpData
           .filter(stock => !isSTStock(stock.stock_chi_name))
           .map(stock => formatStockData(stock, false));
         
-        // 根据板数筛选
-        const filteredData = formattedData.filter(stock => {
+        const filteredLimitUpData = formattedLimitUpData.filter(stock => {
           const boards = stock.limit_up_days || 0;
           return boards === i + 1;
         });
         
-        // 按涨停时间排序，涨停时间早的排在前面
-        const sortedData = filteredData.sort((a, b) => {
-          // 处理空值情况
+        combinedData = combinedData.concat(filteredLimitUpData);
+        
+        if (i > 0) {
+          const brokenData = await fetchStockPoolData('limit_up_broken', dates[i]);
+          const formattedBrokenData = brokenData
+            .filter(stock => !isSTStock(stock.stock_chi_name))
+            .map(stock => formatStockData(stock, true));
+          
+          const filteredBrokenData = formattedBrokenData.filter(stock => {
+            const yesterdayBoards = stock.yesterday_limit_up_days || 0;
+            return yesterdayBoards === i;
+          });
+          
+          combinedData = combinedData.concat(filteredBrokenData);
+        }
+        
+        const sortedData = combinedData.sort((a, b) => {
           if (!a.first_limit_up) return 1;
           if (!b.first_limit_up) return -1;
-          // 比较时间字符串
           return a.first_limit_up.localeCompare(b.first_limit_up);
         });
         
@@ -657,6 +669,10 @@ onMounted(() => {
 
 .zero {
   color: #fff;
+}
+
+.limit-up-name {
+  color: #ff4444;
 }
 
 
