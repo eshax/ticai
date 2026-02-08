@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import KPL from '@/components/KPL.vue';
 import XGT from '../components/XGT.vue';
 import YQGL from '../components/YQGL.vue';
+import DWWJ from '../components/DWWJ.vue';
 
 const routes = [
   { 
@@ -23,6 +24,12 @@ const routes = [
     component: YQGL,
     meta: { title: '预期管理' }
   },
+  {
+      path: '/dwwj',
+      name: 'dwwj',
+      component: DWWJ,
+      meta: { title: '低位挖掘' }
+    },
   { 
     path: '/', 
     redirect: '/kpl'  // 默认显示列表视图
