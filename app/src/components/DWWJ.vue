@@ -351,7 +351,7 @@ const fetchStockData = async () => {
     
     for (let i = 0; i < 4; i++) {
       try {
-        const stockPoolData = await fetchStockPoolData('limit_up', dates[i] !== formatDate(new Date()) ? dates[i] : null);
+        const stockPoolData = await fetchStockPoolData('limit_up', dates[i]);
         
         // 先格式化数据，然后筛选板数
         const formattedData = stockPoolData
