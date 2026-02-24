@@ -9,13 +9,17 @@
             <span v-if="list1.length > 0" class="total-diff" :class="totalDiff1 > 0 ? 'positive' : (totalDiff1 < 0 ? 'negative' : 'zero')">
               <strong>{{ totalDiff1.toFixed(2) }}</strong>
             </span>
-            <span v-if="top3Stocks1.length > 0" class="top-stocks">
-              {{ top3Stocks1.map(stock => stock.name).join(' , ') }}
+            <span v-if="maxMinStocks1.max || maxMinStocks1.min" class="top-stocks">
+              <span v-if="maxMinStocks1.min" class="min-stock">{{ maxMinStocks1.min.name }}</span>
+              <span v-if="maxMinStocks1.max" class="max-stock">{{ maxMinStocks1.max.name }}</span>
             </span>
           </div>
-          <button @click="showDialog(1)" class="add-button">
-            +
-          </button>
+          <div class="header-right">
+            <span class="current-time">{{ currentTime }}</span>
+            <button @click="showDialog(1)" class="add-button">
+              +
+            </button>
+          </div>
         </div>
         <div class="table-wrapper">
           <table class="stock-table">
@@ -43,8 +47,8 @@
                   暂无股票数据
                 </td>
               </tr>
-              <tr v-else v-for="stock in list1" :key="stock.code">
-                <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+              <tr v-else v-for="stock in list1" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks1.max && stock.code === maxMinStocks1.max.code, 'min-diff-stock': maxMinStocks1.min && stock.code === maxMinStocks1.min.code }">
+                <td>{{ stock.code.replace(/^sh|^sz/, '') }} {{ stock.name }}</td>
                 <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                   {{ formatFund(stock.fund) }}
                 </td>
@@ -68,13 +72,17 @@
             <span v-if="list2.length > 0" class="total-diff" :class="totalDiff2 > 0 ? 'positive' : (totalDiff2 < 0 ? 'negative' : 'zero')">
               <strong>{{ totalDiff2.toFixed(2) }}</strong>
             </span>
-            <span v-if="top3Stocks2.length > 0" class="top-stocks">
-              {{ top3Stocks2.map(stock => stock.name).join(' , ') }}
+            <span v-if="maxMinStocks2.max || maxMinStocks2.min" class="top-stocks">
+              <span v-if="maxMinStocks2.min" class="min-stock">{{ maxMinStocks2.min.name }}</span>
+              <span v-if="maxMinStocks2.max" class="max-stock">{{ maxMinStocks2.max.name }}</span>
             </span>
           </div>
-          <button @click="showDialog(2)" class="add-button">
-            +
-          </button>
+          <div class="header-right">
+            <span class="current-time">{{ currentTime }}</span>
+            <button @click="showDialog(2)" class="add-button">
+              +
+            </button>
+          </div>
         </div>
         <div class="table-wrapper">
           <table class="stock-table">
@@ -102,7 +110,7 @@
                   暂无股票数据
                 </td>
               </tr>
-              <tr v-else v-for="stock in list2" :key="stock.code">
+              <tr v-else v-for="stock in list2" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks2.max && stock.code === maxMinStocks2.max.code, 'min-diff-stock': maxMinStocks2.min && stock.code === maxMinStocks2.min.code }">
 
                 <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
                 <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
@@ -130,13 +138,17 @@
               <span v-if="list3A.length > 0" class="total-diff" :class="totalDiff3A > 0 ? 'positive' : (totalDiff3A < 0 ? 'negative' : 'zero')">
                 <strong>{{ totalDiff3A.toFixed(2) }}</strong>
               </span>
-              <span v-if="top3Stocks3A.length > 0" class="top-stocks">
-                {{ top3Stocks3A.map(stock => stock.name).join(' , ') }}
+              <span v-if="maxMinStocks3A.max || maxMinStocks3A.min" class="top-stocks">
+                <span v-if="maxMinStocks3A.min" class="min-stock">{{ maxMinStocks3A.min.name }}</span>
+                <span v-if="maxMinStocks3A.max" class="max-stock">{{ maxMinStocks3A.max.name }}</span>
               </span>
             </div>
+          <div class="header-right">
+            <span class="current-time">{{ currentTime }}</span>
             <button @click="showDialog('3A')" class="add-button">
               +
             </button>
+          </div>
           </div>
           <div class="table-wrapper">
             <table class="stock-table">
@@ -164,7 +176,7 @@
                     暂无股票数据
                   </td>
                 </tr>
-                <tr v-else v-for="stock in list3A" :key="stock.code">
+                <tr v-else v-for="stock in list3A" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks3A.max && stock.code === maxMinStocks3A.max.code, 'min-diff-stock': maxMinStocks3A.min && stock.code === maxMinStocks3A.min.code }">
                   <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
                   <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                     {{ formatFund(stock.fund) }}
@@ -192,13 +204,17 @@
               <span v-if="list3B.length > 0" class="total-diff" :class="totalDiff3B > 0 ? 'positive' : (totalDiff3B < 0 ? 'negative' : 'zero')">
                 <strong>{{ totalDiff3B.toFixed(2) }}</strong>
               </span>
-              <span v-if="top3Stocks3B.length > 0" class="top-stocks">
-                {{ top3Stocks3B.map(stock => stock.name).join(' , ') }}
+              <span v-if="maxMinStocks3B.max || maxMinStocks3B.min" class="top-stocks">
+                <span v-if="maxMinStocks3B.min" class="min-stock">{{ maxMinStocks3B.min.name }}</span>
+                <span v-if="maxMinStocks3B.max" class="max-stock">{{ maxMinStocks3B.max.name }}</span>
               </span>
             </div>
+          <div class="header-right">
+            <span class="current-time">{{ currentTime }}</span>
             <button @click="showDialog('3B')" class="add-button">
               +
             </button>
+          </div>
           </div>
           <div class="table-wrapper">
             <table class="stock-table">
@@ -226,7 +242,7 @@
                     暂无股票数据
                   </td>
                 </tr>
-                <tr v-else v-for="stock in list3B" :key="stock.code">
+                <tr v-else v-for="stock in list3B" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks3B.max && stock.code === maxMinStocks3B.max.code, 'min-diff-stock': maxMinStocks3B.min && stock.code === maxMinStocks3B.min.code }">
                   <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
                   <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                     {{ formatFund(stock.fund) }}
@@ -254,13 +270,17 @@
               <span v-if="list4A.length > 0" class="total-diff" :class="totalDiff4A > 0 ? 'positive' : (totalDiff4A < 0 ? 'negative' : 'zero')">
                 <strong>{{ totalDiff4A.toFixed(2) }}</strong>
               </span>
-              <span v-if="top3Stocks4A.length > 0" class="top-stocks">
-                {{ top3Stocks4A.map(stock => stock.name).join(' , ') }}
+              <span v-if="maxMinStocks4A.max || maxMinStocks4A.min" class="top-stocks">
+                <span v-if="maxMinStocks4A.min" class="min-stock">{{ maxMinStocks4A.min.name }}</span>
+                <span v-if="maxMinStocks4A.max" class="max-stock">{{ maxMinStocks4A.max.name }}</span>
               </span>
             </div>
+          <div class="header-right">
+            <span class="current-time">{{ currentTime }}</span>
             <button @click="showDialog('4A')" class="add-button">
               +
             </button>
+          </div>
           </div>
           <div class="table-wrapper">
             <table class="stock-table">
@@ -288,7 +308,7 @@
                     暂无股票数据
                   </td>
                 </tr>
-                <tr v-else v-for="stock in list4A" :key="stock.code">
+                <tr v-else v-for="stock in list4A" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks4A.max && stock.code === maxMinStocks4A.max.code, 'min-diff-stock': maxMinStocks4A.min && stock.code === maxMinStocks4A.min.code }">
                   <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
                   <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                     {{ formatFund(stock.fund) }}
@@ -316,13 +336,17 @@
               <span v-if="list4B.length > 0" class="total-diff" :class="totalDiff4B > 0 ? 'positive' : (totalDiff4B < 0 ? 'negative' : 'zero')">
                 <strong>{{ totalDiff4B.toFixed(2) }}</strong>
               </span>
-              <span v-if="top3Stocks4B.length > 0" class="top-stocks">
-                {{ top3Stocks4B.map(stock => stock.name).join(' , ') }}
+              <span v-if="maxMinStocks4B.max || maxMinStocks4B.min" class="top-stocks">
+                <span v-if="maxMinStocks4B.min" class="min-stock">{{ maxMinStocks4B.min.name }}</span>
+                <span v-if="maxMinStocks4B.max" class="max-stock">{{ maxMinStocks4B.max.name }}</span>
               </span>
             </div>
+          <div class="header-right">
+            <span class="current-time">{{ currentTime }}</span>
             <button @click="showDialog('4B')" class="add-button">
               +
             </button>
+          </div>
           </div>
           <div class="table-wrapper">
             <table class="stock-table">
@@ -350,7 +374,7 @@
                     暂无股票数据
                   </td>
                 </tr>
-                <tr v-else v-for="stock in list4B" :key="stock.code">
+                <tr v-else v-for="stock in list4B" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks4B.max && stock.code === maxMinStocks4B.max.code, 'min-diff-stock': maxMinStocks4B.min && stock.code === maxMinStocks4B.min.code }">
                   <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
                   <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                     {{ formatFund(stock.fund) }}
@@ -378,13 +402,17 @@
               <span v-if="list4C.length > 0" class="total-diff" :class="totalDiff4C > 0 ? 'positive' : (totalDiff4C < 0 ? 'negative' : 'zero')">
                 <strong>{{ totalDiff4C.toFixed(2) }}</strong>
               </span>
-              <span v-if="top3Stocks4C.length > 0" class="top-stocks">
-                {{ top3Stocks4C.map(stock => stock.name).join(' , ') }}
+              <span v-if="maxMinStocks4C.max || maxMinStocks4C.min" class="top-stocks">
+                <span v-if="maxMinStocks4C.min" class="min-stock">{{ maxMinStocks4C.min.name }}</span>
+                <span v-if="maxMinStocks4C.max" class="max-stock">{{ maxMinStocks4C.max.name }}</span>
               </span>
             </div>
+          <div class="header-right">
+            <span class="current-time">{{ currentTime }}</span>
             <button @click="showDialog('4C')" class="add-button">
               +
             </button>
+          </div>
           </div>
           <div class="table-wrapper">
             <table class="stock-table">
@@ -412,7 +440,7 @@
                     暂无股票数据
                   </td>
                 </tr>
-                <tr v-else v-for="stock in list4C" :key="stock.code">
+                <tr v-else v-for="stock in list4C" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks4C.max && stock.code === maxMinStocks4C.max.code, 'min-diff-stock': maxMinStocks4C.min && stock.code === maxMinStocks4C.min.code }">
                   <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
                   <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                     {{ formatFund(stock.fund) }}
@@ -476,6 +504,20 @@ const list4A = ref([]); // 第四个列表的上列表
 const list4B = ref([]); // 第四个列表的中列表
 const list4C = ref([]); // 第四个列表的下列表
 
+// 当前时间
+const currentTime = ref('');
+
+// 更新当前时间
+const updateCurrentTime = () => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  currentTime.value = `${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
 // 排序状态管理
 const sortStates = ref({
   1: { field: 'diff', order: 'desc' },
@@ -531,54 +573,82 @@ const totalDiff4C = computed(() => {
   return list4C.value.reduce((total, stock) => total + stock.diff, 0);
 });
 
-// 计算属性：获取预期差最大的前三只股票
-const top3Stocks1 = computed(() => {
-  if (!list1.value || list1.value.length === 0) return [];
-  return [...list1.value]
-    .sort((a, b) => b.diff - a.diff)
-    .slice(0, 3);
+// 计算属性：获取预期差最大和最小的股票
+const maxMinStocks1 = computed(() => {
+  if (!list1.value || list1.value.length === 0) return { max: null, min: null };
+  const sorted = [...list1.value].sort((a, b) => b.diff - a.diff);
+  const maxStock = sorted[0];
+  const minStock = sorted[sorted.length - 1];
+  return {
+    max: maxStock && maxStock.diff > 3 ? maxStock : null,
+    min: minStock && minStock.diff < -3 ? minStock : null
+  };
 });
 
-const top3Stocks2 = computed(() => {
-  if (!list2.value || list2.value.length === 0) return [];
-  return [...list2.value]
-    .sort((a, b) => b.diff - a.diff)
-    .slice(0, 3);
+const maxMinStocks2 = computed(() => {
+  if (!list2.value || list2.value.length === 0) return { max: null, min: null };
+  const sorted = [...list2.value].sort((a, b) => b.diff - a.diff);
+  const maxStock = sorted[0];
+  const minStock = sorted[sorted.length - 1];
+  return {
+    max: maxStock && maxStock.diff > 3 ? maxStock : null,
+    min: minStock && minStock.diff < -3 ? minStock : null
+  };
 });
 
-const top3Stocks3A = computed(() => {
-  if (!list3A.value || list3A.value.length === 0) return [];
-  return [...list3A.value]
-    .sort((a, b) => b.diff - a.diff)
-    .slice(0, 3);
+const maxMinStocks3A = computed(() => {
+  if (!list3A.value || list3A.value.length === 0) return { max: null, min: null };
+  const sorted = [...list3A.value].sort((a, b) => b.diff - a.diff);
+  const maxStock = sorted[0];
+  const minStock = sorted[sorted.length - 1];
+  return {
+    max: maxStock && maxStock.diff > 3 ? maxStock : null,
+    min: minStock && minStock.diff < -3 ? minStock : null
+  };
 });
 
-const top3Stocks3B = computed(() => {
-  if (!list3B.value || list3B.value.length === 0) return [];
-  return [...list3B.value]
-    .sort((a, b) => b.diff - a.diff)
-    .slice(0, 3);
+const maxMinStocks3B = computed(() => {
+  if (!list3B.value || list3B.value.length === 0) return { max: null, min: null };
+  const sorted = [...list3B.value].sort((a, b) => b.diff - a.diff);
+  const maxStock = sorted[0];
+  const minStock = sorted[sorted.length - 1];
+  return {
+    max: maxStock && maxStock.diff > 3 ? maxStock : null,
+    min: minStock && minStock.diff < -3 ? minStock : null
+  };
 });
 
-const top3Stocks4A = computed(() => {
-  if (!list4A.value || list4A.value.length === 0) return [];
-  return [...list4A.value]
-    .sort((a, b) => b.diff - a.diff)
-    .slice(0, 3);
+const maxMinStocks4A = computed(() => {
+  if (!list4A.value || list4A.value.length === 0) return { max: null, min: null };
+  const sorted = [...list4A.value].sort((a, b) => b.diff - a.diff);
+  const maxStock = sorted[0];
+  const minStock = sorted[sorted.length - 1];
+  return {
+    max: maxStock && maxStock.diff > 3 ? maxStock : null,
+    min: minStock && minStock.diff < -3 ? minStock : null
+  };
 });
 
-const top3Stocks4B = computed(() => {
-  if (!list4B.value || list4B.value.length === 0) return [];
-  return [...list4B.value]
-    .sort((a, b) => b.diff - a.diff)
-    .slice(0, 3);
+const maxMinStocks4B = computed(() => {
+  if (!list4B.value || list4B.value.length === 0) return { max: null, min: null };
+  const sorted = [...list4B.value].sort((a, b) => b.diff - a.diff);
+  const maxStock = sorted[0];
+  const minStock = sorted[sorted.length - 1];
+  return {
+    max: maxStock && maxStock.diff > 3 ? maxStock : null,
+    min: minStock && minStock.diff < -3 ? minStock : null
+  };
 });
 
-const top3Stocks4C = computed(() => {
-  if (!list4C.value || list4C.value.length === 0) return [];
-  return [...list4C.value]
-    .sort((a, b) => b.diff - a.diff)
-    .slice(0, 3);
+const maxMinStocks4C = computed(() => {
+  if (!list4C.value || list4C.value.length === 0) return { max: null, min: null };
+  const sorted = [...list4C.value].sort((a, b) => b.diff - a.diff);
+  const maxStock = sorted[0];
+  const minStock = sorted[sorted.length - 1];
+  return {
+    max: maxStock && maxStock.diff > 3 ? maxStock : null,
+    min: minStock && minStock.diff < -3 ? minStock : null
+  };
 });
 
 // 显示对话框
@@ -1009,11 +1079,11 @@ const processInput = (text) => {
 // 组件挂载时启动定时器
 onMounted(() => {
   console.log('组件已挂载，准备启动定时器');
-  // 延迟执行初始更新，避免水合错误
+  updateCurrentTime();
+  setInterval(updateCurrentTime, 1000);
   setTimeout(() => {
     updateStockData();
   }, 100);
-  // 启动定时器
   startUpdateTimer();
 });
 
@@ -1038,7 +1108,7 @@ onBeforeUnmount(() => {
 }
 
 h1 {
-  font-size: 14px;
+  font-size: 12px;
   margin-bottom: 12px;
   color: #409eff;
   text-align: center;
@@ -1092,13 +1162,13 @@ h1 {
   background-color: #409eff;
   color: white;
   border: none;
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 10px;
   font-weight: bold;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1106,6 +1176,18 @@ h1 {
 
 .add-button:hover {
   background-color: #66b1ff;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-time {
+  font-size: 12px;
+  color: #e0e0e0;
+  font-weight: 500;
 }
 
 /* 顶部股票信息样式 */
@@ -1117,6 +1199,24 @@ h1 {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 500px;
+}
+
+.max-stock {
+  color: #ff4444;
+  
+}
+
+.min-stock {
+  color: #44ff44;
+  margin-right: 4px;
+}
+
+.max-diff-stock td:first-child {
+  color: #ff4444;
+}
+
+.min-diff-stock td:first-child {
+  color: #44ff44;
 }
 
 .table-wrapper {
@@ -1175,7 +1275,7 @@ h1 {
   padding: 8px;
   text-align: center;
   border-bottom: 1px solid #333;
-  font-size: 12px;
+  font-size: 10px;
 }
 
 /* 股票列左对齐 */
@@ -1244,6 +1344,7 @@ h1 {
 
 .dialog-header h3 {
   color: #409eff;
+  font-size: 14px;
   margin: 0;
 }
 
@@ -1262,7 +1363,7 @@ h1 {
 }
 
 .dialog-body {
-  padding: 15px;
+  padding: 12px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -1275,7 +1376,7 @@ h1 {
   border: 1px solid #333;
   border-radius: 4px;
   padding: 10px;
-  font-size: 12px;
+  font-size: 10px;
   resize: vertical;
   box-sizing: border-box;
   flex-grow: 1;
