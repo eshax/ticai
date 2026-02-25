@@ -48,7 +48,7 @@
                 </td>
               </tr>
               <tr v-else v-for="stock in list1" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks1.max && stock.code === maxMinStocks1.max.code, 'min-diff-stock': maxMinStocks1.min && stock.code === maxMinStocks1.min.code }">
-                <td>{{ stock.code.replace(/^sh|^sz/, '') }} {{ stock.name }}</td>
+                <td><span :class="getStockCodeClass(1, stock.diff)">{{ stock.code.replace(/^sh|^sz/, '') }}</span> <span :class="getStockNameClass(1, stock.diff)">{{ stock.name }}</span></td>
                 <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                   {{ formatFund(stock.fund) }}
                 </td>
@@ -112,7 +112,7 @@
               </tr>
               <tr v-else v-for="stock in list2" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks2.max && stock.code === maxMinStocks2.max.code, 'min-diff-stock': maxMinStocks2.min && stock.code === maxMinStocks2.min.code }">
 
-                <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                <td><span :class="getStockCodeClass(2, stock.diff)">{{ stock.code.replace(/^sh|^sz/, '') }}</span> - <span :class="getStockNameClass(2, stock.diff)">{{ stock.name }}</span></td>
                 <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                   {{ formatFund(stock.fund) }}
                 </td>
@@ -177,7 +177,7 @@
                   </td>
                 </tr>
                 <tr v-else v-for="stock in list3A" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks3A.max && stock.code === maxMinStocks3A.max.code, 'min-diff-stock': maxMinStocks3A.min && stock.code === maxMinStocks3A.min.code }">
-                  <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                  <td><span :class="getStockCodeClass('3A', stock.diff)">{{ stock.code.replace(/^sh|^sz/, '') }}</span> - <span :class="getStockNameClass('3A', stock.diff)">{{ stock.name }}</span></td>
                   <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                     {{ formatFund(stock.fund) }}
                   </td>
@@ -243,7 +243,7 @@
                   </td>
                 </tr>
                 <tr v-else v-for="stock in list3B" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks3B.max && stock.code === maxMinStocks3B.max.code, 'min-diff-stock': maxMinStocks3B.min && stock.code === maxMinStocks3B.min.code }">
-                  <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                  <td><span :class="getStockCodeClass('3B', stock.diff)">{{ stock.code.replace(/^sh|^sz/, '') }}</span> - <span :class="getStockNameClass('3B', stock.diff)">{{ stock.name }}</span></td>
                   <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                     {{ formatFund(stock.fund) }}
                   </td>
@@ -309,7 +309,7 @@
                   </td>
                 </tr>
                 <tr v-else v-for="stock in list4A" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks4A.max && stock.code === maxMinStocks4A.max.code, 'min-diff-stock': maxMinStocks4A.min && stock.code === maxMinStocks4A.min.code }">
-                  <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                  <td><span :class="getStockCodeClass('4A', stock.diff)">{{ stock.code.replace(/^sh|^sz/, '') }}</span> - <span :class="getStockNameClass('4A', stock.diff)">{{ stock.name }}</span></td>
                   <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                     {{ formatFund(stock.fund) }}
                   </td>
@@ -375,7 +375,7 @@
                   </td>
                 </tr>
                 <tr v-else v-for="stock in list4B" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks4B.max && stock.code === maxMinStocks4B.max.code, 'min-diff-stock': maxMinStocks4B.min && stock.code === maxMinStocks4B.min.code }">
-                  <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                  <td><span :class="getStockCodeClass('4B', stock.diff)">{{ stock.code.replace(/^sh|^sz/, '') }}</span> - <span :class="getStockNameClass('4B', stock.diff)">{{ stock.name }}</span></td>
                   <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                     {{ formatFund(stock.fund) }}
                   </td>
@@ -441,7 +441,7 @@
                   </td>
                 </tr>
                 <tr v-else v-for="stock in list4C" :key="stock.code" :class="{ 'max-diff-stock': maxMinStocks4C.max && stock.code === maxMinStocks4C.max.code, 'min-diff-stock': maxMinStocks4C.min && stock.code === maxMinStocks4C.min.code }">
-                  <td>{{ stock.code.replace(/^sh|^sz/, '') }} - {{ stock.name }}</td>
+                  <td><span :class="getStockCodeClass('4C', stock.diff)">{{ stock.code.replace(/^sh|^sz/, '') }}</span> - <span :class="getStockNameClass('4C', stock.diff)">{{ stock.name }}</span></td>
                   <td :class="stock.fundType === 'buy' ? 'positive' : (stock.fundType === 'sell' ? 'negative' : '')">
                     {{ formatFund(stock.fund) }}
                   </td>
@@ -694,6 +694,65 @@ const getList = (listNum) => {
     default: return list1;
   }
 };
+
+// 获取股票代码样式的辅助函数
+const getStockCodeClass = (listNum, diff) => {
+  const maxMinStocks = {
+    1: maxMinStocks1,
+    2: maxMinStocks2,
+    '3A': maxMinStocks3A,
+    '3B': maxMinStocks3B,
+    '4A': maxMinStocks4A,
+    '4B': maxMinStocks4B,
+    '4C': maxMinStocks4C
+  };
+  
+  const { max, min } = maxMinStocks[listNum].value;
+  
+  if (max && diff === max.diff) {
+    return '';
+  }
+  if (min && diff === min.diff) {
+    return '';
+  }
+  if (diff > 3) {
+    return 'positive';
+  }
+  if (diff < -3) {
+    return 'negative';
+  }
+  return '';
+};
+
+// 获取股票名称样式的辅助函数
+const getStockNameClass = (listNum, diff) => {
+  const maxMinStocks = {
+    1: maxMinStocks1,
+    2: maxMinStocks2,
+    '3A': maxMinStocks3A,
+    '3B': maxMinStocks3B,
+    '4A': maxMinStocks4A,
+    '4B': maxMinStocks4B,
+    '4C': maxMinStocks4C
+  };
+  
+  const { max, min } = maxMinStocks[listNum].value;
+  
+  if (max && diff === max.diff) {
+    return '';
+  }
+  if (min && diff === min.diff) {
+    return '';
+  }
+  if (diff > 3) {
+    return 'positive';
+  }
+  if (diff < -3) {
+    return 'negative';
+  }
+  return '';
+};
+
 
 // 处理确认按钮
 const handleConfirm = () => {
@@ -1203,20 +1262,107 @@ h1 {
 
 .max-stock {
   color: #ff4444;
-  
+  position: relative;
+  display: inline-block;
+  animation: textGlow 2s ease-in-out infinite;
+}
+
+@keyframes textGlow {
+  0%, 100% {
+    color: #ff4444;
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    color: #ff5757;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+  }
+}
+
+@keyframes textGlowGreen {
+  0%, 100% {
+    color: #44ff44;
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    color: #44ff44;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+  }
 }
 
 .min-stock {
   color: #44ff44;
   margin-right: 4px;
+  position: relative;
+  display: inline-block;
+  animation: textGlowGreen 2s ease-in-out infinite;
+}
+
+/* 字符级颜色跑马灯动画 */
+@keyframes colorMarquee {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+  0% {
+    background-position: -100% 0;
+  }  
+}
+
+.color-marquee {
+  position: relative;
+  display: inline-block;
+  color: inherit;
+  overflow: hidden;
+}
+
+.color-marquee::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 1%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: colorMarquee 1s linear infinite;
+  pointer-events: none;
 }
 
 .max-diff-stock td:first-child {
   color: #ff4444;
+  position: relative;
+  display: inline-block;
+  animation: textGlow 500ms ease-in-out infinite;
 }
 
 .min-diff-stock td:first-child {
   color: #44ff44;
+  position: relative;
+  display: inline-block;
+  animation: textGlowGreen 500ms ease-in-out infinite;
+}
+
+.stock-code-orange {
+  color: #FFA500;
+}
+
+.stock-code-yellow-green {
+  color: #9ACD32;
+}
+
+.stock-name-orange {
+  color: #FFA500;
+}
+
+.stock-name-yellow-green {
+  color: #9ACD32;
 }
 
 .table-wrapper {
