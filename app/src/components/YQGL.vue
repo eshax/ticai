@@ -1262,9 +1262,9 @@ h1 {
 
 .max-stock {
   color: #ff4444;
-  position: relative;
-  display: inline-block;
-  animation: textGlow 2s ease-in-out infinite;
+  /* position: relative; */
+  /* display: inline-block; */
+  /* animation: textGlow 2s ease-in-out infinite; */
 }
 
 @keyframes textGlow {
@@ -1273,7 +1273,7 @@ h1 {
     text-shadow: 0 0 0 rgba(255, 255, 255, 0);
   }
   50% {
-    color: #ff5757;
+    color: #ff4444;
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
   }
 }
@@ -1292,60 +1292,22 @@ h1 {
 .min-stock {
   color: #44ff44;
   margin-right: 4px;
-  position: relative;
-  display: inline-block;
-  animation: textGlowGreen 2s ease-in-out infinite;
-}
-
-/* 字符级颜色跑马灯动画 */
-@keyframes colorMarquee {
-  0% {
-    background-position: -100% 0;
-  }
-  100% {
-    background-position: 100% 0;
-  }
-  0% {
-    background-position: -100% 0;
-  }  
-}
-
-.color-marquee {
-  position: relative;
-  display: inline-block;
-  color: inherit;
-  overflow: hidden;
-}
-
-.color-marquee::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.4) 1%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: colorMarquee 1s linear infinite;
-  pointer-events: none;
+  /* position: relative; */
+  /* display: inline-block; */
+  /* animation: textGlowGreen 2s ease-in-out infinite; */
 }
 
 .max-diff-stock td:first-child {
   color: #ff4444;
-  position: relative;
-  display: inline-block;
+  /* position: relative; */
+  /* display: inline-block; */
   animation: textGlow 500ms ease-in-out infinite;
 }
 
 .min-diff-stock td:first-child {
   color: #44ff44;
-  position: relative;
-  display: inline-block;
+  /* position: relative; */
+  /* display: inline-block; */
   animation: textGlowGreen 500ms ease-in-out infinite;
 }
 
